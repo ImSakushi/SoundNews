@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoundNews</title>
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Votre feuille de style -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+
+        <!-- Éléments du haut -->
+        <header class="header">
+            <button id="settings-btn" class="icon-button" aria-label="Paramètres">
+                <i class="fas fa-cog"></i>
+            </button>
+        </header>
+
+        <!-- Zone centrale principale -->
+        <main class="main-content">
+            <div class="image-container">
+                <img src="https://cdn.automobile-propre.com/uploads/2024/11/elon-musk-trump.jpg" alt="Illustration" class="central-image">
+                <div class="overlay-circle black-circle"></div>
+                <div class="right-overlay">
+                    <h2 class="title">Trump<br>vs. Musk : Power Plays
+                        <p class="date">27 nov. 2024</p>
+                    </h2>
+
+                    <p class="subtitle">Moins d’une semaine après sa victoire, Donald Trump commence déjà à constituer son futur gouvernement. Elon Musk va piloter un nouveau ministère de « l’Efficacité gouvernementale ».</p>
+
+                    <!-- Nouveau bouton Play -->
+                    <button class="play-button-overlay" aria-label="Lire l'actualité">
+                        <i class="fas fa-play"></i>
+                    </button>
+                </div>
+            </div>
+
+            <section class="categories">
+                <div class="category-row">
+                    <button class="category-button">
+                        <i class="fas fa-user-shield"></i>
+                        Politique
+                    </button>
+                    <button class="category-button">
+                        <i class="fas fa-chart-line"></i>
+                        Économie
+                    </button>
+                </div>
+                <div class="category-row">
+                    <button class="category-button full-width">
+                        <i class="fas fa-book-open"></i>
+                        Société
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Boutons d'action au-dessus du footer -->
+        <section class="action-buttons">
+            <button class="action-button back-button" aria-label="Retour">
+                <img src="images/retour.svg" alt="Retour">
+            </button>
+            <button class="action-button cross-button" aria-label="Rejeter">
+                <i class="fas fa-times"></i>
+            </button>
+            <button class="action-button check-button" aria-label="Accepter">
+                <i class="fas fa-check"></i>
+            </button>
+            <button class="action-button bookmark-button" aria-label="Bookmark">
+                <img src="images/bookmark.svg" alt="Bookmark">
+            </button>
+        </section>
+
+        <!-- Zone inférieure (Barre de navigation) -->
+        <footer class="footer">
+            <div class="footer-container">
+                <button class="nav-button" aria-label="Statistiques">
+                    <i class="fas fa-chart-bar"></i>
+                </button>
+                <button class="nav-button play-button" aria-label="Lire">
+                    <img src="images/logo.svg" alt="Logo" class="play-logo">
+                </button>
+                <button class="nav-button" aria-label="Historique">
+                    <i class="fas fa-clock"></i>
+                </button>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Votre script JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
