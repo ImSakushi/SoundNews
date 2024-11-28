@@ -54,7 +54,7 @@ body, html {
   flex: 1; /* Permet à main-content de prendre tout l'espace disponible */
   display: flex;
   flex-direction: column;
-  padding-top: 4rem; /* Centre verticalement les éléments à l'intérieur */
+  padding-top: 2rem; /* Centre verticalement les éléments à l'intérieur */
   align-items: center; /* Centre horizontalement les éléments à l'intérieur */
   position: relative;
 }
@@ -162,16 +162,17 @@ body, html {
 /* Nouveau conteneur pour les boutons du footer */
 .footer-container {
   display: flex;
-  justify-content: space-between; /* Espace équitable entre les boutons */
-  align-items: center;
-  background-color: #313131; /* Fond gris */
-  padding: 10px 20px;
+  justify-content: space-between;
+  align-items: center; /* Déjà présent mais important */
+  background-color: #313131;
+  padding: 15px 20px; /* Augmenté légèrement le padding vertical */
   border-top-left-radius: 40px;
   border-top-right-radius: 40px;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); /* Optionnel : ajout d'une ombre pour l'esthétique */
-  max-width: 230px; /* Ajustez selon vos besoins */
-  width: 100%; /* Prend la largeur maximale disponible jusqu'à max-width */
-  z-index: 1; /* Position de base */
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  max-width: 230px;
+  width: 100%;
+  z-index: 1;
+  height: 70px; /* Ajout d'une hauteur fixe */
 }
 
 /* Réduire l'espace entre les icônes */
@@ -198,6 +199,12 @@ body, html {
   font-size: 2rem;
   cursor: pointer;
   transition: color 0.3s;
+  display: flex; /* Ajout */
+  align-items: center; /* Ajout */
+  justify-content: center; /* Ajout */
+  height: 100%; /* Ajout */
+  padding: 0; /* Ajout */
+  margin: 0 10px; /* Conservé mais déplacé ici */
 }
 
 .nav-button:hover {
