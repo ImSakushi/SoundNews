@@ -6,6 +6,8 @@
   --accent-yellow: #FFD700;
   --accent-white: #FFFFFF;
   --button-hover: #333333;
+  --progress-bg: #646464;
+  --progress-fill: #D9D9D9;
 }
 
 /* Réinitialisation de base */
@@ -65,6 +67,7 @@ body, html {
   width: 100%;
   max-width: 342px;
   aspect-ratio: 1 / 1;
+  transition: max-width 0.3s ease-out;
   cursor: grab; /* Indique que l'image peut être "agrippée" */
 
   /* Ajouts pour empêcher les comportements par défaut */
@@ -113,6 +116,21 @@ body, html {
   flex-direction: column;
   align-items: center;
   margin-top: 2rem; /* Réduit de 20px à 10px */
+}
+
+.categories, .action-buttons {
+  transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
+}
+
+/* Classe pour l'état réduit */
+.reduced {
+  max-width: 200px !important;
+}
+
+/* Classe pour cacher les éléments */
+.hidden {
+  opacity: 0;
+  visibility: hidden;
 }
 
 .category-row {
@@ -349,4 +367,92 @@ body, html {
 .back-button:active,
 .bookmark-button:active {
   transform: scale(0.95);
+}
+
+/* Style pour le nouveau bouton play/pause */
+.play-button-absolute {
+  position: fixed;
+  left: 50%;
+  bottom: 10%;
+  transform: translate(-50%, -50%);
+  background-color: transparent; /* Suppression du fond jaune */
+  border: none;
+  /* Suppression de border-radius, width et height pour enlever le rond */
+  display: none; /* Masqué par défaut */
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: opacity 0.3s ease-out;
+}
+
+.play-button-absolute i {
+  color: var(--accent-yellow); /* Changement de la couleur de l'icône en jaune */
+  font-size: 2.5rem; /* Augmentation de la taille pour une meilleure visibilité */
+}
+
+.play-button-absolute.visible {
+  display: flex;
+}
+
+/* Styles pour le lecteur MP3 */
+.audio-player {
+  position: fixed;
+  bottom: 20%; /* Positionné au-dessus du bouton play */
+  left: 50%;
+  transform: translateX(-50%);
+  display: none; /* Masqué par défaut */
+  flex-direction: column; /* Aligne les éléments verticalement */
+  align-items: center;
+  gap: 5px; /* Espacement réduit entre la barre et les temps */
+  width: 80%;
+  max-width: 400px;
+  padding: 10px 15px;
+  border-radius: 10px;
+  backdrop-filter: blur(5px);
+  z-index: 9;
+}
+
+.audio-player.visible {
+  display: flex;
+}
+
+.audio-player input[type=range] {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--progress-bg);
+  outline: none;
+  border-radius: 2px;
+  background-image: linear-gradient(to right, var(--progress-fill) 0%, var(--progress-fill) 0%, var(--progress-bg) 0%, var(--progress-bg) 100%);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.audio-player input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0; /* Suppression de la boule */
+  height: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.audio-player input[type=range]::-moz-range-thumb {
+  width: 0;
+  height: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.audio-player .time-labels {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.audio-player .time-labels span {
+  color: var(--accent-white);
+  font-size: 0.7rem;
 }
