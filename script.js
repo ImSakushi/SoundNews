@@ -14,6 +14,7 @@ const toggleReducedState = (shouldReduce) => {
     const rightOverlay = $('.right-overlay');
     const absolutePlayButton = $('.play-button-absolute');
     const audioPlayer = $('.audio-player');
+    const mainContent = $('.main-content'); // Sélectionner main-content
 
     if (shouldReduce) {
         imageContainer.classList.add('reduced');
@@ -22,6 +23,7 @@ const toggleReducedState = (shouldReduce) => {
         rightOverlay.classList.add('hidden');
         absolutePlayButton.classList.add('visible');
         audioPlayer.classList.add('visible');
+        mainContent.classList.add('reduced-padding'); // Ajouter la classe
     } else {
         imageContainer.classList.remove('reduced');
         categories.classList.remove('hidden');
@@ -29,6 +31,7 @@ const toggleReducedState = (shouldReduce) => {
         rightOverlay.classList.remove('hidden');
         absolutePlayButton.classList.remove('visible');
         audioPlayer.classList.remove('visible');
+        mainContent.classList.remove('reduced-padding'); // Supprimer la classe
         // S'assurer que les boutons reviennent à leur état initial
         $('.play-button-overlay i').classList.replace('fa-pause', 'fa-play');
         absolutePlayButton.querySelector('i').classList.replace('fa-pause', 'fa-play');
@@ -151,14 +154,16 @@ const endDrag = () => {
 
 // Fonction pour démarrer l'audio
 const startAudio = () => {
-    audioElement.play();
-    isPlaying = true;
+  audioElement.play();
+  isPlaying = true;
+  $('.lyrics-container').classList.add('visible'); // Afficher les paroles
 };
 
 // Fonction pour arrêter l'audio
 const stopAudio = () => {
-    audioElement.pause();
-    isPlaying = false;
+  audioElement.pause();
+  isPlaying = false;
+  $('.lyrics-container').classList.remove('visible'); // Masquer les paroles
 };
 
 // Fonction pour mettre à jour le playbackRate
@@ -197,30 +202,30 @@ const autoRotate = timestamp => {
 
 // Fonction qui gère le play/pause pour les deux boutons
 const handlePlayPause = () => {
-    if (!isPlaying) {
-        startAudio();
-        $('.play-button-overlay i').classList.replace('fa-play', 'fa-pause');
-        playButtonAbsolute.querySelector('i').classList.replace('fa-play', 'fa-pause');
-        toggleReducedState(true);
-        if (!autoRotateAnimationId) {
-            autoRotateEnabled = true;
-            lastAutoRotateTime = null;
-            autoRotateAnimationId = requestAnimationFrame(autoRotate);
-        }
-    } else {
-        stopAudio();
-        $('.play-button-overlay i').classList.replace('fa-pause', 'fa-play');
-        playButtonAbsolute.querySelector('i').classList.replace('fa-pause', 'fa-play');
-        toggleReducedState(false);
-        if (autoRotateAnimationId) {
-            cancelAnimationFrame(autoRotateAnimationId);
-            autoRotateAnimationId = null;
-            autoRotateEnabled = false;
-        }
-        userRotation = 0;
-        autoRotation = 0;
-        updateTransform();
-    }
+  if (!isPlaying) {
+      startAudio();
+      $('.play-button-overlay i').classList.replace('fa-play', 'fa-pause');
+      playButtonAbsolute.querySelector('i').classList.replace('fa-play', 'fa-pause');
+      toggleReducedState(true);
+      if (!autoRotateAnimationId) {
+          autoRotateEnabled = true;
+          lastAutoRotateTime = null;
+          autoRotateAnimationId = requestAnimationFrame(autoRotate);
+      }
+  } else {
+      stopAudio();
+      $('.play-button-overlay i').classList.replace('fa-pause', 'fa-play');
+      playButtonAbsolute.querySelector('i').classList.replace('fa-pause', 'fa-play');
+      toggleReducedState(false);
+      if (autoRotateAnimationId) {
+          cancelAnimationFrame(autoRotateAnimationId);
+          autoRotateAnimationId = null;
+          autoRotateEnabled = false;
+      }
+      userRotation = 0;
+      autoRotation = 0;
+      updateTransform();
+  }
 };
 
 // Ajouter les écouteurs pour les événements pointer
@@ -331,3 +336,123 @@ audioElement.addEventListener('loadedmetadata', () => {
 const updateProgressBarBackground = (percent) => {
     progressBar.style.backgroundImage = `linear-gradient(to right, var(--progress-fill) ${percent}%, var(--progress-bg) ${percent}%)`;
 };
+
+let lyrics = [];
+let currentLyricIndex = -1;
+
+// Fonction pour charger et parser le fichier LRC
+const loadLyrics = () => {
+  fetch('musics/lyrics.lrc') // Assure-toi que le chemin est correct
+      .then(response => response.text())
+      .then(text => {
+          lyrics = parseLRC(text);
+          renderLyrics(lyrics);
+          // Afficher les paroles uniquement si la musique est en cours de lecture
+          if (isPlaying) {
+              $('.lyrics-container').classList.add('visible');
+          }
+      })
+      .catch(error => {
+          console.error('Erreur lors du chargement des paroles :', error);
+      });
+};
+
+
+// Fonction pour parser le contenu LRC
+const parseLRC = (lrcText) => {
+  const lines = lrcText.split('\n');
+  const parsedLyrics = [];
+
+  const timeRegEx = /\[(\d{2}):(\d{2}\.\d{2})\](.*)/;
+
+  lines.forEach(line => {
+      const match = line.match(timeRegEx);
+      if (match) {
+          const minutes = parseInt(match[1], 10);
+          const seconds = parseFloat(match[2]);
+          const text = match[3].trim();
+          const time = minutes * 60 + seconds;
+          parsedLyrics.push({ time, text });
+      }
+  });
+
+  // Trier les paroles par temps croissant
+  parsedLyrics.sort((a, b) => a.time - b.time);
+
+  return parsedLyrics;
+};
+
+// Fonction pour rendre les paroles dans le DOM
+const renderLyrics = (lyrics) => {
+  const lyricsContainer = $('.lyrics');
+  lyricsContainer.innerHTML = ''; // Réinitialiser les paroles
+
+  lyrics.forEach((line, index) => {
+      const lineElement = document.createElement('div');
+      lineElement.classList.add('lyric-line', 'future');
+      lineElement.setAttribute('data-index', index);
+      lineElement.textContent = line.text;
+
+      // Ajouter l'écouteur de clic
+      lineElement.addEventListener('click', () => {
+          audioElement.currentTime = line.time;
+          updateLyricsDisplay(line.time);
+      });
+
+      lyricsContainer.appendChild(lineElement);
+  });
+
+  // Afficher la première ligne comme future si aucune lecture n'a commencé
+  if (lyrics.length > 0) {
+      currentLyricIndex = -1;
+      updateLyricsDisplay(0);
+  }
+};
+
+// Fonction pour mettre à jour l'affichage des paroles
+const updateLyricsDisplay = (currentTime) => {
+  if (lyrics.length === 0) return;
+
+  // Trouver l'index de la ligne actuelle
+  for (let i = 0; i < lyrics.length; i++) {
+      if (currentTime < lyrics[i].time) {
+          currentLyricIndex = i - 1;
+          break;
+      }
+  }
+
+  // Si on est à la fin des paroles
+  if (currentTime >= lyrics[lyrics.length - 1].time) {
+      currentLyricIndex = lyrics.length - 1;
+  }
+
+  // Mettre à jour les styles des paroles
+  $$('.lyric-line').forEach(line => {
+      const index = parseInt(line.getAttribute('data-index'), 10);
+      if (index === currentLyricIndex) {
+          line.classList.add('current');
+          line.classList.remove('past', 'future');
+      } else if (index < currentLyricIndex) {
+          line.classList.add('past');
+          line.classList.remove('current', 'future');
+      } else {
+          line.classList.add('future');
+          line.classList.remove('current', 'past');
+      }
+  });
+
+  // Faire défiler pour centrer la ligne actuelle
+  const currentLine = $(`.lyric-line[data-index="${currentLyricIndex}"]`);
+  if (currentLine) {
+      currentLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+};
+
+// Ajouter l'événement `timeupdate` pour synchroniser les paroles
+audioElement.addEventListener('timeupdate', () => {
+    const currentTime = audioElement.currentTime;
+    updateLyricsDisplay(currentTime);
+});
+
+// Charger les paroles au démarrage
+document.addEventListener('DOMContentLoaded', loadLyrics);

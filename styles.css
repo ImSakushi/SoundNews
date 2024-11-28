@@ -490,11 +490,114 @@ body, html {
   margin: 0; /* Supprimer les marges existantes si nécessaire */
 }
 
-.footer-container .play-button {
-  /* Optionnel : ajouter des styles spécifiques pour le bouton Play si nécessaire */
-}
-
 /* Optionnel : ajouter des styles pour centrer les labels si besoin */
 .nav-item .nav-label {
   text-align: center;
+}
+
+
+/* Container des paroles synchronisées */
+.lyrics-container {
+  position: fixed;
+  top: 55%; /* Ajusté pour mieux positionner les paroles */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  max-width: 600px;
+  height: 300px; /* Augmenté pour mieux contenir les paroles */
+  overflow-y: auto; /* Permet le défilement vertical */
+  pointer-events: none; /* Empêche les interactions avec les paroles */
+  z-index: 4; /* Assure qu'il est au-dessus des autres éléments */
+  display: none; /* Caché par défaut */
+  background: rgba(26, 26, 26, 0.8); /* Fond semi-transparent pour meilleure lisibilité */
+  border-radius: 10px; /* Coins arrondis */
+  padding: 10px; /* Padding pour espacer les paroles des bords */
+}
+
+
+/* Container des paroles visibles */
+.lyrics-container.visible {
+  display: block;
+}
+
+/* Container des paroles */
+.lyrics {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; /* Aligne les paroles en haut */
+  height: 100%;
+}
+
+/* Ligne de paroles */
+.lyric-line {
+  /* Supprimer les césures */
+  hyphens: none;
+
+  /* Assurer que les mots se cassent correctement */
+  overflow-wrap: break-word;
+  word-break: break-word; /* Assure une bonne compatibilité */
+
+  /* S'assurer que les espaces sont gérés correctement */
+  white-space: normal;
+
+  /* Styles existants */
+  font-size: 1rem; /* Taille de base */
+  color: gray;
+  transition: all 0.3s ease, transform 0.3s ease;
+  text-align: center;
+  margin: 5px 0;
+  display: inline-block; /* Nécessaire pour la transformation */
+  transform-origin: center; /* Ajouté pour centrer la transformation */
+  width: 63%;
+  padding: 0.3rem;
+  font-weight: 200;
+}
+
+/* Paroles déjà chantées */
+.lyric-line.past {
+  color: lightgray;
+  font-size: 1rem; /* Maintenir la taille de base */
+  width: 63%;
+}
+
+/* Parole en cours de chant */
+.lyric-line.current {
+  color: var(--accent-yellow);
+  transform: scale(1.5); /* Agrandir sans modifier la taille de police */
+  font-weight: bold;
+  position: relative; /* Assure que le scaling ne déplace pas les éléments */
+  z-index: 1; /* Assure que le texte reste au-dessus */
+  width: 63%;
+}
+
+/* Paroles à venir */
+.lyric-line.future {
+  color: gray;
+  font-size: 1rem; /* Maintenir la taille de base */
+  width: 63%;
+}
+
+/* Scroll automatique pour centrer la ligne actuelle */
+.lyrics-container .lyrics {
+  transition: transform 0.3s ease;
+}
+
+/* Style pour le scrollbar (optionnel) */
+.lyrics-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lyrics-container::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 215, 0, 0.5);
+  border-radius: 3px;
+}
+
+.lyrics-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.main-content.reduced-padding {
+  padding-top: 0;
+  transition: padding-top 0.3s ease-out; /* Optionnel : ajouter une transition fluide */
 }
