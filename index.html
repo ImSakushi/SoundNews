@@ -90,18 +90,32 @@
 
         <!-- Zone inférieure (Barre de navigation) -->
         <footer class="footer">
-            <div class="footer-container">
-                <button class="nav-button" aria-label="Statistiques">
-                    <i class="fas fa-chart-bar"></i>
-                </button>
+          <div class="footer-container">
+              <!-- Bouton Statistiques avec label -->
+              <div class="nav-item">
+                  <button class="nav-button" aria-label="Statistiques">
+                      <i class="fas fa-chart-bar"></i>
+                  </button>
+                  <span class="nav-label">Statistiques</span>
+              </div>
+
+              <!-- Bouton Lire (Play) sans label -->
+              <div class="nav-item">
                 <button class="nav-button play-button" aria-label="Lire">
                     <img src="images/logo.svg" alt="Logo" class="play-logo">
                 </button>
-                <button class="nav-button" aria-label="Historique">
-                    <i class="fas fa-clock"></i>
-                </button>
-            </div>
-        </footer>
+              </div>
+
+
+              <!-- Bouton Historique avec label -->
+              <div class="nav-item">
+                  <button class="nav-button" aria-label="Historique">
+                      <i class="fas fa-clock"></i>
+                  </button>
+                  <span class="nav-label">Historique</span>
+              </div>
+          </div>
+      </footer>
 
     </div>
 

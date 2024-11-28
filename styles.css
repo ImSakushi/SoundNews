@@ -456,3 +456,45 @@ body, html {
   color: var(--accent-white);
   font-size: 0.7rem;
 }
+
+.footer-container .nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.nav-label {
+  font-size: 0.6rem; /* Taille de police réduite */
+  text-transform: uppercase; /* Majuscules */
+  color: var(--accent-white); /* Couleur du texte */
+  margin-top: 4px; /* Espacement au-dessus du label */
+}
+
+/* Ajustements supplémentaires pour le footer-container */
+.footer-container {
+  display: flex;
+  justify-content: space-around; /* Espace autour des éléments */
+  align-items: center;
+  background-color: #313131;
+  padding: 15px 20px;
+  border-top-left-radius: 40px;
+  border-top-right-radius: 40px;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  max-width: 258px;
+  width: 100%;
+  z-index: 1;
+  height: 70px; /* Assure que le footer a assez de hauteur pour les labels */
+}
+
+.footer-container .nav-button {
+  margin: 0; /* Supprimer les marges existantes si nécessaire */
+}
+
+.footer-container .play-button {
+  /* Optionnel : ajouter des styles spécifiques pour le bouton Play si nécessaire */
+}
+
+/* Optionnel : ajouter des styles pour centrer les labels si besoin */
+.nav-item .nav-label {
+  text-align: center;
+}
