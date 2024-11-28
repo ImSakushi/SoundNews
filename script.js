@@ -2,9 +2,16 @@
 const $ = selector => document.querySelector(selector);
 const $$ = selector => document.querySelectorAll(selector);
 
+// Configuration de l'API Backend
+const API_URL = "https://soundnews-backend.onrender.com/api"; // Assurez-vous que le backend tourne sur ce port
+
 // Variables pour le scroll
 let lastScrollY = window.scrollY;
 let isScrollingUp = false;
+
+// Liste des musiques et index actuel
+let musicsList = [];
+let currentMusicIndex = 0;
 
 // Fonction pour gérer l'état réduit et la visibilité des éléments
 const toggleReducedState = (shouldReduce) => {
@@ -48,20 +55,21 @@ $$('.category-button').forEach(button => {
     button.addEventListener('click', () => {
         const category = button.textContent.trim();
         alert(`Afficher les nouvelles de la catégorie : ${category}`);
+        // Implémentez le filtrage des musiques par catégorie ici
     });
 });
 
 // Boutons de la barre de navigation
 $$('.nav-button').forEach(button => {
     button.addEventListener('click', () => {
-        const icon = button.querySelector('i');
+        const icon = button.querySelector('i') || button.querySelector('.play-logo');
         const actions = {
             'fa-chart-bar': 'Afficher les statistiques d\'écoute.',
             'fa-play': 'Lancer la playlist.',
             'fa-clock': 'Afficher l\'historique ou sauvegardes.'
         };
         for (const [cls, msg] of Object.entries(actions)) {
-            if (icon && icon.classList.contains(cls)) {
+            if (icon && (icon.classList.contains(cls) || (cls === 'fa-play' && icon.classList.contains('play-logo')))) {
                 alert(msg);
                 break;
             }
@@ -75,10 +83,15 @@ $$('.nav-button').forEach(button => {
         const actions = {
             '.back-button': 'Retour à la page précédente.',
             '.cross-button': 'Rejeté.',
-            '.check-button': 'Accepté.',
+            '.check-button': 'Passage à la musique suivante.',
             '.bookmark-button': 'Article sauvegardé dans les favoris.'
         };
         alert(actions[selector]);
+
+        // Action spécifique pour le bouton "Accepter" (check-button)
+        if (selector === '.check-button') {
+            playNextMusic();
+        }
     });
 });
 
@@ -92,7 +105,7 @@ const imageContainer = $('.image-container');
 const centralImage = $('.central-image');
 const playButtonOverlay = $('.play-button-overlay');
 const playButtonAbsolute = $('.play-button-absolute');
-const audioElement = new Audio('musics/test.mp3');
+let audioElement = new Audio(); // Initialisé sans source
 audioElement.loop = true;
 
 let isPlaying = false;
@@ -154,16 +167,16 @@ const endDrag = () => {
 
 // Fonction pour démarrer l'audio
 const startAudio = () => {
-  audioElement.play();
-  isPlaying = true;
-  $('.lyrics-container').classList.add('visible'); // Afficher les paroles
+    audioElement.play();
+    isPlaying = true;
+    $('.lyrics-container').classList.add('visible'); // Afficher les paroles
 };
 
 // Fonction pour arrêter l'audio
 const stopAudio = () => {
-  audioElement.pause();
-  isPlaying = false;
-  $('.lyrics-container').classList.remove('visible'); // Masquer les paroles
+    audioElement.pause();
+    isPlaying = false;
+    $('.lyrics-container').classList.remove('visible'); // Masquer les paroles
 };
 
 // Fonction pour mettre à jour le playbackRate
@@ -202,30 +215,30 @@ const autoRotate = timestamp => {
 
 // Fonction qui gère le play/pause pour les deux boutons
 const handlePlayPause = () => {
-  if (!isPlaying) {
-      startAudio();
-      $('.play-button-overlay i').classList.replace('fa-play', 'fa-pause');
-      playButtonAbsolute.querySelector('i').classList.replace('fa-play', 'fa-pause');
-      toggleReducedState(true);
-      if (!autoRotateAnimationId) {
-          autoRotateEnabled = true;
-          lastAutoRotateTime = null;
-          autoRotateAnimationId = requestAnimationFrame(autoRotate);
-      }
-  } else {
-      stopAudio();
-      $('.play-button-overlay i').classList.replace('fa-pause', 'fa-play');
-      playButtonAbsolute.querySelector('i').classList.replace('fa-pause', 'fa-play');
-      toggleReducedState(false);
-      if (autoRotateAnimationId) {
-          cancelAnimationFrame(autoRotateAnimationId);
-          autoRotateAnimationId = null;
-          autoRotateEnabled = false;
-      }
-      userRotation = 0;
-      autoRotation = 0;
-      updateTransform();
-  }
+    if (!isPlaying) {
+        startAudio();
+        $('.play-button-overlay i').classList.replace('fa-play', 'fa-pause');
+        playButtonAbsolute.querySelector('i').classList.replace('fa-play', 'fa-pause');
+        toggleReducedState(true);
+        if (!autoRotateAnimationId) {
+            autoRotateEnabled = true;
+            lastAutoRotateTime = null;
+            autoRotateAnimationId = requestAnimationFrame(autoRotate);
+        }
+    } else {
+        stopAudio();
+        $('.play-button-overlay i').classList.replace('fa-pause', 'fa-play');
+        playButtonAbsolute.querySelector('i').classList.replace('fa-pause', 'fa-play');
+        toggleReducedState(false);
+        if (autoRotateAnimationId) {
+            cancelAnimationFrame(autoRotateAnimationId);
+            autoRotateAnimationId = null;
+            autoRotateEnabled = false;
+        }
+        userRotation = 0;
+        autoRotation = 0;
+        updateTransform();
+    }
 };
 
 // Ajouter les écouteurs pour les événements pointer
@@ -285,6 +298,8 @@ audioElement.addEventListener('ended', () => {
     userRotation = 0;
     autoRotation = 0;
     updateTransform();
+    // Optionnel : Passer à la musique suivante automatiquement
+    playNextMusic();
 });
 
 // Mettre à jour la barre de progression et les temps
@@ -341,111 +356,103 @@ let lyrics = [];
 let currentLyricIndex = -1;
 
 // Fonction pour charger et parser le fichier LRC
-const loadLyrics = () => {
-  fetch('musics/lyrics.lrc') // Assure-toi que le chemin est correct
-      .then(response => response.text())
-      .then(text => {
-          lyrics = parseLRC(text);
-          renderLyrics(lyrics);
-          // Afficher les paroles uniquement si la musique est en cours de lecture
-          if (isPlaying) {
-              $('.lyrics-container').classList.add('visible');
-          }
-      })
-      .catch(error => {
-          console.error('Erreur lors du chargement des paroles :', error);
-      });
+const loadLyrics = (lyricContent) => {
+    lyrics = parseLRC(lyricContent);
+    renderLyrics(lyrics);
+    // Afficher les paroles uniquement si la musique est en cours de lecture
+    if (isPlaying) {
+        $('.lyrics-container').classList.add('visible');
+    }
 };
-
 
 // Fonction pour parser le contenu LRC
 const parseLRC = (lrcText) => {
-  const lines = lrcText.split('\n');
-  const parsedLyrics = [];
+    const lines = lrcText.split('\n');
+    const parsedLyrics = [];
 
-  const timeRegEx = /\[(\d{2}):(\d{2}\.\d{2})\](.*)/;
+    const timeRegEx = /\[(\d{2}):(\d{2}\.\d{2})\](.*)/;
 
-  lines.forEach(line => {
-      const match = line.match(timeRegEx);
-      if (match) {
-          const minutes = parseInt(match[1], 10);
-          const seconds = parseFloat(match[2]);
-          const text = match[3].trim();
-          const time = minutes * 60 + seconds;
-          parsedLyrics.push({ time, text });
-      }
-  });
+    lines.forEach(line => {
+        const match = line.match(timeRegEx);
+        if (match) {
+            const minutes = parseInt(match[1], 10);
+            const seconds = parseFloat(match[2]);
+            const text = match[3].trim();
+            const time = minutes * 60 + seconds;
+            parsedLyrics.push({ time, text });
+        }
+    });
 
-  // Trier les paroles par temps croissant
-  parsedLyrics.sort((a, b) => a.time - b.time);
+    // Trier les paroles par temps croissant
+    parsedLyrics.sort((a, b) => a.time - b.time);
 
-  return parsedLyrics;
+    return parsedLyrics;
 };
 
 // Fonction pour rendre les paroles dans le DOM
 const renderLyrics = (lyrics) => {
-  const lyricsContainer = $('.lyrics');
-  lyricsContainer.innerHTML = ''; // Réinitialiser les paroles
+    const lyricsContainer = $('.lyrics');
+    lyricsContainer.innerHTML = ''; // Réinitialiser les paroles
 
-  lyrics.forEach((line, index) => {
-      const lineElement = document.createElement('div');
-      lineElement.classList.add('lyric-line', 'future');
-      lineElement.setAttribute('data-index', index);
-      lineElement.textContent = line.text;
+    lyrics.forEach((line, index) => {
+        const lineElement = document.createElement('div');
+        lineElement.classList.add('lyric-line', 'future');
+        lineElement.setAttribute('data-index', index);
+        lineElement.textContent = line.text;
 
-      // Ajouter l'écouteur de clic
-      lineElement.addEventListener('click', () => {
-          audioElement.currentTime = line.time;
-          updateLyricsDisplay(line.time);
-      });
+        // Ajouter l'écouteur de clic
+        lineElement.addEventListener('click', () => {
+            audioElement.currentTime = line.time;
+            updateLyricsDisplay(line.time);
+        });
 
-      lyricsContainer.appendChild(lineElement);
-  });
+        lyricsContainer.appendChild(lineElement);
+    });
 
-  // Afficher la première ligne comme future si aucune lecture n'a commencé
-  if (lyrics.length > 0) {
-      currentLyricIndex = -1;
-      updateLyricsDisplay(0);
-  }
+    // Afficher la première ligne comme future si aucune lecture n'a commencé
+    if (lyrics.length > 0) {
+        currentLyricIndex = -1;
+        updateLyricsDisplay(0);
+    }
 };
 
 // Fonction pour mettre à jour l'affichage des paroles
 const updateLyricsDisplay = (currentTime) => {
-  if (lyrics.length === 0) return;
+    if (lyrics.length === 0) return;
 
-  // Trouver l'index de la ligne actuelle
-  for (let i = 0; i < lyrics.length; i++) {
-      if (currentTime < lyrics[i].time) {
-          currentLyricIndex = i - 1;
-          break;
-      }
-  }
+    // Trouver l'index de la ligne actuelle
+    for (let i = 0; i < lyrics.length; i++) {
+        if (currentTime < lyrics[i].time) {
+            currentLyricIndex = i - 1;
+            break;
+        }
+    }
 
-  // Si on est à la fin des paroles
-  if (currentTime >= lyrics[lyrics.length - 1].time) {
-      currentLyricIndex = lyrics.length - 1;
-  }
+    // Si on est à la fin des paroles
+    if (currentTime >= lyrics[lyrics.length - 1].time) {
+        currentLyricIndex = lyrics.length - 1;
+    }
 
-  // Mettre à jour les styles des paroles
-  $$('.lyric-line').forEach(line => {
-      const index = parseInt(line.getAttribute('data-index'), 10);
-      if (index === currentLyricIndex) {
-          line.classList.add('current');
-          line.classList.remove('past', 'future');
-      } else if (index < currentLyricIndex) {
-          line.classList.add('past');
-          line.classList.remove('current', 'future');
-      } else {
-          line.classList.add('future');
-          line.classList.remove('current', 'past');
-      }
-  });
+    // Mettre à jour les styles des paroles
+    $$('.lyric-line').forEach(line => {
+        const index = parseInt(line.getAttribute('data-index'), 10);
+        if (index === currentLyricIndex) {
+            line.classList.add('current');
+            line.classList.remove('past', 'future');
+        } else if (index < currentLyricIndex) {
+            line.classList.add('past');
+            line.classList.remove('current', 'future');
+        } else {
+            line.classList.add('future');
+            line.classList.remove('current', 'past');
+        }
+    });
 
-  // Faire défiler pour centrer la ligne actuelle
-  const currentLine = $(`.lyric-line[data-index="${currentLyricIndex}"]`);
-  if (currentLine) {
-      currentLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
+    // Faire défiler pour centrer la ligne actuelle
+    const currentLine = $(`.lyric-line[data-index="${currentLyricIndex}"]`);
+    if (currentLine) {
+        currentLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 };
 
 // Ajouter l'événement `timeupdate` pour synchroniser les paroles
@@ -454,5 +461,127 @@ audioElement.addEventListener('timeupdate', () => {
     updateLyricsDisplay(currentTime);
 });
 
-// Charger les paroles au démarrage
-document.addEventListener('DOMContentLoaded', loadLyrics);
+// Charger les musiques au démarrage
+document.addEventListener('DOMContentLoaded', () => {
+    fetchMusics(); // Charger les musiques au chargement
+});
+
+// Fonction pour récupérer les musiques depuis le backend
+const fetchMusics = async () => {
+    try {
+        const response = await fetch(`${API_URL}/musics`);
+        if (!response.ok) {
+            throw new Error('Erreur lors de la récupération des musiques');
+        }
+        const musics = await response.json();
+        musicsList = musics;
+        if (musicsList.length > 0) {
+            currentMusicIndex = 0;
+            setMusicDetails(currentMusicIndex); // Afficher les détails sans jouer
+        } else {
+            alert('Aucune musique disponible.');
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Impossible de charger les musiques. Veuillez réessayer plus tard.');
+    }
+};
+
+// Fonction pour définir les détails d'une musique sans jouer
+const setMusicDetails = (index) => {
+    if (index < 0 || index >= musicsList.length) {
+        alert('Index de musique invalide.');
+        return;
+    }
+    const music = musicsList[index];
+    // Mettre à jour l'interface avec les détails de la musique
+    centralImage.src = music.coverImage;
+    $('.title').innerHTML = `${music.title}<br><p class="date">${new Date(music.createdAt).toLocaleDateString()}</p>`;
+    $('.subtitle').textContent = music.artist;
+    audioElement.src = music.audioUrl;
+    // Charger les paroles
+    if (music.lyrics && music.lyrics.content) {
+        loadLyrics(music.lyrics.content);
+    } else {
+        $('.lyrics-container').classList.remove('visible');
+        $('.lyrics').innerHTML = '<p>Aucune parole disponible.</p>';
+    }
+    // Mettre à jour les boutons de lecture
+    $('.play-button-overlay i').classList.replace('fa-pause', 'fa-play');
+    playButtonAbsolute.querySelector('i').classList.replace('fa-pause', 'fa-play');
+    // Ne pas appeler toggleReducedState ni startAudio ici
+};
+
+// Fonction pour charger et jouer une musique par son index
+const loadMusicByIndex = (index) => {
+    if (index < 0 || index >= musicsList.length) {
+        alert('Index de musique invalide.');
+        return;
+    }
+    const music = musicsList[index];
+    // Mettre à jour l'interface avec les détails de la musique
+    centralImage.src = music.coverImage;
+    $('.title').innerHTML = `${music.title}<br><p class="date">${new Date(music.createdAt).toLocaleDateString()}</p>`;
+    $('.subtitle').textContent = music.artist;
+    audioElement.src = music.audioUrl;
+    // Charger les paroles
+    if (music.lyrics && music.lyrics.content) {
+        loadLyrics(music.lyrics.content);
+    } else {
+        $('.lyrics-container').classList.remove('visible');
+        $('.lyrics').innerHTML = '<p>Aucune parole disponible.</p>';
+    }
+    // Mettre à jour les boutons de lecture
+    $('.play-button-overlay i').classList.replace('fa-play', 'fa-pause');
+    playButtonAbsolute.querySelector('i').classList.replace('fa-play', 'fa-pause');
+    toggleReducedState(true);
+    if (!autoRotateAnimationId) {
+        autoRotateEnabled = true;
+        lastAutoRotateTime = null;
+        autoRotateAnimationId = requestAnimationFrame(autoRotate);
+    }
+    // Démarrer l'audio
+    startAudio();
+};
+
+// Fonction pour jouer la musique suivante
+const playNextMusic = () => {
+    if (musicsList.length === 0) return;
+
+    // Arrêter l'audio actuel
+    stopAudio();
+
+    // Incrémenter l'index, revenir au début si on atteint la fin
+    currentMusicIndex = (currentMusicIndex + 1) % musicsList.length;
+
+    // Charger et jouer la musique suivante
+    loadMusicByIndex(currentMusicIndex);
+};
+
+// Gestion de la lecture/pausing via les boutons play/pause absolus
+playButtonAbsolute.addEventListener('click', handlePlayPause);
+
+// Gestion du lecteur audio en fonction des interactions
+audioElement.addEventListener('play', () => {
+    isPlaying = true;
+    $('.play-button-overlay i').classList.replace('fa-play', 'fa-pause');
+    playButtonAbsolute.querySelector('i').classList.replace('fa-play', 'fa-pause');
+    toggleReducedState(true);
+    if (!autoRotateAnimationId) {
+        autoRotateEnabled = true;
+        lastAutoRotateTime = null;
+        autoRotateAnimationId = requestAnimationFrame(autoRotate);
+    }
+});
+
+audioElement.addEventListener('pause', () => {
+    isPlaying = false;
+    $('.play-button-overlay i').classList.replace('fa-pause', 'fa-play');
+    playButtonAbsolute.querySelector('i').classList.replace('fa-pause', 'fa-play');
+    toggleReducedState(false);
+    if (autoRotateAnimationId) {
+        cancelAnimationFrame(autoRotateAnimationId);
+        autoRotateAnimationId = null;
+        autoRotateEnabled = false;
+    }
+});

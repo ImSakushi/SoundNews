@@ -601,3 +601,71 @@ body, html {
   padding-top: 0;
   transition: padding-top 0.3s ease-out; /* Optionnel : ajouter une transition fluide */
 }
+
+/* Section Liste des musiques */
+.music-list {
+  width: 100%;
+  max-width: 600px;
+  margin: 2rem 0;
+  padding: 0 1rem;
+}
+
+.music-list h3 {
+  margin-bottom: 1rem;
+  text-align: center;
+  color: var(--accent-yellow);
+}
+
+.musics-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.music-item {
+  display: flex;
+  align-items: center;
+  background-color: #2E2E2E;
+  padding: 10px;
+  border-radius: 10px;
+  transition: background-color 0.3s;
+}
+
+.music-item:hover {
+  background-color: #3E3E3E;
+}
+
+.music-cover {
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  object-fit: cover;
+  margin-right: 15px;
+}
+
+.music-info {
+  flex: 1;
+}
+
+.music-info h4 {
+  margin-bottom: 5px;
+  font-size: 1rem;
+}
+
+.music-info p {
+  font-size: 0.9rem;
+  color: var(--accent-white);
+}
+
+.play-music-btn {
+  background: none;
+  border: none;
+  color: var(--accent-white);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.play-music-btn:hover {
+  color: var(--accent-yellow);
+}

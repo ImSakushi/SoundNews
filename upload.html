@@ -1,0 +1,36 @@
+<!-- Formulaire d'ajout de musique -->
+<section class="upload-section">
+  <h3>Ajouter une Nouvelle Musique</h3>
+  <form id="upload-form" enctype="multipart/form-data">
+      <div class="form-group">
+          <label for="title">Titre :</label>
+          <input type="text" id="title" name="title" required>
+      </div>
+      <div class="form-group">
+          <label for="artist">Artiste :</label>
+          <input type="text" id="artist" name="artist" required>
+      </div>
+      <div class="form-group">
+          <label for="category">Catégorie :</label>
+          <select id="category" name="category" required>
+              <option value="">Sélectionner une catégorie</option>
+              <option value="Politique">Politique</option>
+              <option value="Économie">Économie</option>
+              <option value="Société">Société</option>
+          </select>
+      </div>
+      <div class="form-group">
+          <label for="audio">Fichier Audio :</label>
+          <input type="file" id="audio" name="audio" accept="audio/*" required>
+      </div>
+      <div class="form-group">
+          <label for="coverImage">Image de Couverture :</label>
+          <input type="file" id="coverImage" name="coverImage" accept="image/*" required>
+      </div>
+      <div class="form-group">
+          <label for="lyricsContent">Paroles (LRC) :</label>
+          <textarea id="lyricsContent" name="lyricsContent" rows="5" placeholder="[00:00.00]Première ligne de parole..."></textarea>
+      </div>
+      <button type="submit">Télécharger</button>
+  </form>
+</section>
