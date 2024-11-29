@@ -502,8 +502,8 @@ body, html {
 
 /* Container des paroles synchronisées */
 .lyrics-container {
-  position: relative;
-  top: 10%;
+  position: fixed;
+  top: 55%; /* Ajusté pour mieux positionner les paroles */
   left: 50%;
   transform: translate(-50%, -50%);
   width: 100%;
@@ -672,4 +672,67 @@ body, html {
 
 .play-music-btn:hover {
   color: var(--accent-yellow);
+}
+
+/* Media Query pour les petits écrans (max-width: 480px) */
+@media (max-height: 480px) {
+  .lyrics-container {
+    height: 200px;
+    /* Vous pouvez également ajuster d'autres propriétés si nécessaire */
+    width: 90%; /* Par exemple, réduire la largeur */
+    top: 50%; /* Ajuster la position si besoin */
+    padding: 8px; /* Réduire le padding */
+  }
+
+  /* Ajustements supplémentaires pour améliorer l'affichage sur petits écrans */
+  .main-content {
+    padding: 1rem 0.5rem;
+  }
+
+  .footer-container {
+    max-width: 200px;
+    height: 60px;
+    padding: 10px 15px;
+  }
+
+  .category-button {
+    padding: 4px 10px;
+    margin: 4px 4px;
+    font-size: 0.9rem;
+  }
+
+  .lyric-line {
+    font-size: 0.9rem;
+    width: 80%;
+  }
+
+  /* Autres ajustements possibles */
+}
+
+/* Media Query pour les très petits écrans (max-width: 360px) */
+@media (max-height: 765px) {
+  .lyrics-container {
+    height: 200px;
+    width: 95%;
+    padding: 6px;
+  }
+
+  .footer-container {
+    max-width: 180px;
+    height: 50px;
+    padding: 8px 10px;
+  }
+
+  .category-button {
+    padding: 3px 8px;
+    margin: 3px 3px;
+    font-size: 0.8rem;
+  }
+
+  .lyric-line {
+    font-size: 0.85rem;
+    width: 90%;
+  }
+
+  /* Autres ajustements spécifiques */
 }
