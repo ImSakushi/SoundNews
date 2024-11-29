@@ -31,6 +31,9 @@ body, html {
   height: 100vh;
 }
 
+
+
+
 /* Éléments du haut */
 .header {
   display: flex;
@@ -53,12 +56,13 @@ body, html {
 
 /* Zone centrale principale */
 .main-content {
-  flex: 1; /* Permet à main-content de prendre tout l'espace disponible */
+  flex: 1;
   display: flex;
   flex-direction: column;
-  padding-top: 2rem; /* Centre verticalement les éléments à l'intérieur */
-  align-items: center; /* Centre horizontalement les éléments à l'intérieur */
+  padding: 2rem 1rem; /* Ajustement du padding pour les petits écrans */
+  align-items: center;
   position: relative;
+  overflow-y: auto; /* Permet le défilement si nécessaire */
 }
 
 /* Image Container */
@@ -498,8 +502,8 @@ body, html {
 
 /* Container des paroles synchronisées */
 .lyrics-container {
-  position: fixed;
-  top: 55%; /* Ajusté pour mieux positionner les paroles */
+  position: relative;
+  top: 10%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 100%;
