@@ -81,16 +81,19 @@ body, html {
   z-index: 1; /* Position de base */
 }
 
+.central-image.colored {
+  filter: none;
+  transition: filter 0.5s ease; /* Transition pour une modification fluide */
+}
+
+/* Ajoute une transition dans la classe existante pour le filtre */
 .central-image {
   width: 100%;
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  /* Suppression de la bordure */
-  /* border: 5px solid var(--accent-yellow); */
-
-  /* Conversion en noir et blanc */
   filter: grayscale(100%);
+  transition: filter 0.5s ease; /* Transition pour une modification fluide */
 }
 
 .central-image:hover {
@@ -735,4 +738,143 @@ body, html {
   }
 
   /* Autres ajustements spécifiques */
+}
+
+/* Styles pour la Page de Préférences */
+.preferences-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 100vh;
+  padding: 2rem 1rem;
+  background-color: var(--background-color);
+  color: var(--accent-white);
+}
+
+.logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 2rem;
+}
+
+.logo {
+  width: 150px; /* Ajuste la taille selon tes préférences */
+  height: auto;
+}
+
+.app-title {
+  margin-top: 1rem;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.motivation-text {
+  margin-top: 3rem;
+  font-size: 1.25rem;
+  text-align: center;
+}
+
+.categories-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 400px;
+  margin-top: 2rem;
+}
+
+
+
+
+
+.action-button-container {
+  margin-bottom: 2rem;
+}
+
+.action-button.check-button {
+  background-color: var(--background-color);
+  border: 2px solid #FFFFFF;
+  color: #FFFFFF;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.action-button.check-button:hover,
+.action-button.check-button:active {
+  background-color: #FFFFFF;
+  color: #000000;
+}
+
+/* Ajout de la classe pour l'état sélectionné des boutons de catégorie */
+.category-button.selected {
+  background-color: var(--accent-yellow); /* Fond jaune */
+  color: #000000; /* Texte noir */
+}
+
+/* Garder le hover pour indiquer qu'ils sont interactifs */
+
+.action-button.check-button i {
+  font-size: 1.75rem;
+  transition: transform 0.3s ease; /* Ajout d'une transition fluide */
+}
+
+.action-button.check-button .fa-arrow-right {
+  transform: rotate(0deg);
+}
+
+.action-button.check-button.clicked .fa-arrow-right {
+  transform: rotate(90deg); /* Exemple de rotation pour l'icône */
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000; /* Fond noir opaque */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+  z-index: 1000; /* Assure que l'overlay est au-dessus de tout */
+}
+
+.overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Contenu de l'Overlay */
+.overlay-content {
+  text-align: center;
+  color: #FFFFFF;
+}
+
+.overlay-text {
+  font-size: 1.5rem;
+  margin: 20px 0;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+.overlay-text.visible {
+  opacity: 1;
+}
+
+.overlay-text.fade-out {
+  opacity: 0;
+}
+
+.overlay-text i {
+  color: var(--accent-yellow);
+  margin-left: 5px;
 }

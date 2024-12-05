@@ -42,6 +42,8 @@ const toggleReducedState = (shouldReduce) => {
         // S'assurer que les boutons reviennent à leur état initial
         $('.play-button-overlay i').classList.replace('fa-pause', 'fa-play');
         absolutePlayButton.querySelector('i').classList.replace('fa-pause', 'fa-play');
+        // Réappliquer le filtre noir et blanc lorsque l'état est réduit
+        centralImage.classList.remove('colored');
     }
 };
 
@@ -80,20 +82,23 @@ $$('.nav-button').forEach(button => {
 // Boutons d'action au-dessus du footer
 ['.back-button', '.cross-button', '.check-button', '.bookmark-button'].forEach(selector => {
     $(selector).addEventListener('click', () => {
-        const actions = {
-            '.back-button': 'Retour à la page précédente.',
-            '.cross-button': 'Rejeté.',
-            '.check-button': 'Passage à la musique suivante.',
-            '.bookmark-button': 'Article sauvegardé dans les favoris.'
-        };
-        alert(actions[selector]);
-
-        // Action spécifique pour le bouton "Accepter" (check-button)
         if (selector === '.check-button') {
-            playNextMusic();
+            // Action spécifique pour le bouton "Accepter" (check-button)
+            loadNextMusic(); // Charger la musique suivante sans démarrer la lecture
+        } else if (selector === '.cross-button') {
+            // Action spécifique pour le bouton "Rejeter" (cross-button)
+            loadNextMusic(); // Charger la musique suivante sans démarrer la lecture
+        } else {
+            // Actions pour les autres boutons
+            const actions = {
+                '.back-button': 'Retour à la page précédente.',
+                '.bookmark-button': 'Article sauvegardé dans les favoris.'
+            };
+            alert(actions[selector]);
         }
     });
 });
+
 
 // Variables pour la rotation avec inertie
 let isDragging = false, startAngle = 0, userRotation = 0, autoRotation = 0, velocity = 0;
@@ -170,6 +175,9 @@ const startAudio = () => {
     audioElement.play();
     isPlaying = true;
     $('.lyrics-container').classList.add('visible'); // Afficher les paroles
+    
+    // Enlever le filtre noir et blanc
+    centralImage.classList.add('colored');
 };
 
 // Fonction pour arrêter l'audio
@@ -177,6 +185,9 @@ const stopAudio = () => {
     audioElement.pause();
     isPlaying = false;
     $('.lyrics-container').classList.remove('visible'); // Masquer les paroles
+    
+    // Réappliquer le filtre noir et blanc
+    centralImage.classList.remove('colored');
 };
 
 // Fonction pour mettre à jour le playbackRate
@@ -299,7 +310,7 @@ audioElement.addEventListener('ended', () => {
     autoRotation = 0;
     updateTransform();
     // Optionnel : Passer à la musique suivante automatiquement
-    playNextMusic();
+    loadNextMusic(); // Cette ligne déclenchera le chargement de la musique suivante sans la jouer
 });
 
 // Mettre à jour la barre de progression et les temps
@@ -512,7 +523,7 @@ const setMusicDetails = (index) => {
     // Ne pas appeler toggleReducedState ni startAudio ici
 };
 
-// Fonction pour charger et jouer une musique par son index
+// Fonction pour charger une musique par son index sans démarrer la lecture ou modifier l'interface
 const loadMusicByIndex = (index) => {
     if (index < 0 || index >= musicsList.length) {
         alert('Index de musique invalide.');
@@ -531,21 +542,11 @@ const loadMusicByIndex = (index) => {
         $('.lyrics-container').classList.remove('visible');
         $('.lyrics').innerHTML = '<p>Aucune parole disponible.</p>';
     }
-    // Mettre à jour les boutons de lecture
-    $('.play-button-overlay i').classList.replace('fa-play', 'fa-pause');
-    playButtonAbsolute.querySelector('i').classList.replace('fa-play', 'fa-pause');
-    toggleReducedState(true);
-    if (!autoRotateAnimationId) {
-        autoRotateEnabled = true;
-        lastAutoRotateTime = null;
-        autoRotateAnimationId = requestAnimationFrame(autoRotate);
-    }
-    // Démarrer l'audio
-    startAudio();
+    // Ne pas modifier les boutons de lecture ou l'interface ici
 };
 
-// Fonction pour jouer la musique suivante
-const playNextMusic = () => {
+// Fonction pour charger la musique suivante sans démarrer la lecture
+const loadNextMusic = () => {
     if (musicsList.length === 0) return;
 
     // Arrêter l'audio actuel
@@ -554,8 +555,48 @@ const playNextMusic = () => {
     // Incrémenter l'index, revenir au début si on atteint la fin
     currentMusicIndex = (currentMusicIndex + 1) % musicsList.length;
 
-    // Charger et jouer la musique suivante
+    // Charger la musique suivante sans démarrer la lecture ni modifier l'interface
     loadMusicByIndex(currentMusicIndex);
+
+    // Ne pas démarrer la lecture automatiquement
+    // Ne pas appeler toggleReducedState(true)
+};
+
+// Fonction pour jouer la musique suivante automatiquement (si souhaité)
+const playNextMusicAutomatically = () => {
+    if (musicsList.length === 0) return;
+
+    // Arrêter l'audio actuel
+    stopAudio();
+
+    // Incrémenter l'index, revenir au début si on atteint la fin
+    currentMusicIndex = (currentMusicIndex + 1) % musicsList.length;
+
+    // Charger la musique suivante
+    loadMusicByIndex(currentMusicIndex);
+
+    // Démarrer la lecture
+    startAudio();
+
+    // Modifier l'interface utilisateur pour le mode réduit
+    toggleReducedState(true);
+};
+
+// Fonction pour jouer la musique précédente (si nécessaire)
+const playPreviousMusic = () => {
+    if (musicsList.length === 0) return;
+
+    // Arrêter l'audio actuel
+    stopAudio();
+
+    // Décrémenter l'index, revenir à la fin si on atteint le début
+    currentMusicIndex = (currentMusicIndex - 1 + musicsList.length) % musicsList.length;
+
+    // Charger la musique précédente sans démarrer la lecture ni modifier l'interface
+    loadMusicByIndex(currentMusicIndex);
+
+    // Ne pas démarrer la lecture automatiquement
+    // Ne pas appeler toggleReducedState(true)
 };
 
 // Gestion de la lecture/pausing via les boutons play/pause absolus
@@ -585,3 +626,5 @@ audioElement.addEventListener('pause', () => {
         autoRotateEnabled = false;
     }
 });
+
+

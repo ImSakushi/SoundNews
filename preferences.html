@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sound News - Préférences</title>
+    <!-- Lien vers le fichier CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="preferences-container">
+        <!-- Logo -->
+        <div class="logo-container">
+            <img src="images/logo.svg" alt="Sound News Logo" class="logo">
+            <h1 class="app-title">Sound News</h1>
+        </div>
+
+        <!-- Texte de Motivation -->
+        <div class="motivation-text">
+            <p>Qu’est-ce qui te passionne ? ❤️‍🔥</p>
+        </div>
+
+        <!-- Boutons de Catégories -->
+        <div class="categories-container">
+            <button class="category-button">Science</button>
+            <button class="category-button">Sécurité</button>
+            <button class="category-button">Environnement</button>
+            <button class="category-button">Technologie</button>
+            <button class="category-button">Santé</button>
+            <button class="category-button">Politique</button>
+            <button class="category-button">Société</button>
+            <button class="category-button">Culture</button>
+            <button class="category-button">Économie</button>
+            <button class="category-button">Sport</button>
+        </div>
+
+        <!-- Bouton d'Action (Check-Button) -->
+        <div class="action-button-container">
+            <button class="action-button check-button">
+                <i class="fa fa-check"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Overlay pour les messages de bienvenue -->
+    <div id="overlay" class="overlay">
+        <div class="overlay-content">
+            <p id="overlay-text1" style="font-weight: 600" class="overlay-text">Bienvenue sur SoundNews.</p>
+            <p id="overlay-text2" class="overlay-text">Si vous aimez le thème,<br> appuyez sur <i class="fas fa-check"></i>.</p>
+            <p id="overlay-text3" class="overlay-text">Sinon, appuyez sur <i class="fas fa-times"></i>.</p>
+        </div>
+    </div>
+
+    <!-- Lien vers Font Awesome pour les icônes (optionnel) -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <!-- Lien vers le fichier JavaScript spécifique à la page de préférences -->
+    <script src="preferences.js"></script>
+</body>
+</html>
