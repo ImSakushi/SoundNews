@@ -3,7 +3,8 @@ const $ = selector => document.querySelector(selector);
 const $$ = selector => document.querySelectorAll(selector);
 
 // Configuration de l'API Backend
-const API_URL = "https://soundnews-backend.onrender.com/api"; // Assurez-vous que le backend tourne sur ce port
+const API_URL = "https://soundnews-backend.onrender.com/api"; // Assure-toi que cette URL est correcte
+// Si ton backend est en local, utilise "http://localhost:5000/api" à la place
 
 // Variables pour le scroll
 let lastScrollY = window.scrollY;
@@ -13,122 +14,43 @@ let isScrollingUp = false;
 let musicsList = [];
 let currentMusicIndex = 0;
 
-// Fonction pour gérer l'état réduit et la visibilité des éléments
-const toggleReducedState = (shouldReduce) => {
-    const imageContainer = $('.image-container');
-    const categories = $('.categories');
-    const actionButtons = $('.action-buttons');
-    const rightOverlay = $('.right-overlay');
-    const absolutePlayButton = $('.play-button-absolute');
-    const audioPlayer = $('.audio-player');
-    const mainContent = $('.main-content'); // Sélectionner main-content
+// Sélectionner les éléments du DOM
+const settingsButton = $('#settings-btn');
+const categoryButtons = $$('.category-button');
+const navButtons = $$('.nav-button');
+const actionButtons = $$('.action-button');
+const bookmarkButtonImg = $('.bookmark-button img'); // L'image dans le bouton Bookmark
+const centralImage = $('.central-image');
+const titleElement = $('.title');
+const subtitleElement = $('.subtitle');
+const playButtonOverlay = $('.play-button-overlay');
+const playButtonAbsolute = $('.play-button-absolute');
+const audioPlayer = $('.audio-player');
+const progressBar = $('#progress-bar');
+const currentTimeEl = $('.current-time');
+const remainingTimeEl = $('.remaining-time');
+const lyricsContainer = $('.lyrics-container');
+const lyricsElement = $('.lyrics');
+const audioElement = new Audio(); // Élément audio
+audioElement.loop = true;
 
-    if (shouldReduce) {
-        imageContainer.classList.add('reduced');
-        categories.classList.add('hidden');
-        actionButtons.classList.add('hidden');
-        rightOverlay.classList.add('hidden');
-        absolutePlayButton.classList.add('visible');
-        audioPlayer.classList.add('visible');
-        mainContent.classList.add('reduced-padding'); // Ajouter la classe
-    } else {
-        imageContainer.classList.remove('reduced');
-        categories.classList.remove('hidden');
-        actionButtons.classList.remove('hidden');
-        rightOverlay.classList.remove('hidden');
-        absolutePlayButton.classList.remove('visible');
-        audioPlayer.classList.remove('visible');
-        mainContent.classList.remove('reduced-padding'); // Supprimer la classe
-        // S'assurer que les boutons reviennent à leur état initial
-        $('.play-button-overlay i').classList.replace('fa-pause', 'fa-play');
-        absolutePlayButton.querySelector('i').classList.replace('fa-pause', 'fa-play');
-        // Réappliquer le filtre noir et blanc lorsque l'état est réduit
-        centralImage.classList.remove('colored');
-    }
-};
+// Variables pour le contrôle de la lecture
+let isPlaying = false;
 
-// Bouton Paramètres
-$('#settings-btn').addEventListener('click', () => {
-    alert('Accéder aux paramètres de l\'application.');
-});
-
-// Boutons Catégories
-$$('.category-button').forEach(button => {
-    button.addEventListener('click', () => {
-        const category = button.textContent.trim();
-        alert(`Afficher les nouvelles de la catégorie : ${category}`);
-        // Implémentez le filtrage des musiques par catégorie ici
-    });
-});
-
-// Boutons de la barre de navigation
-$$('.nav-button').forEach(button => {
-    button.addEventListener('click', () => {
-        const icon = button.querySelector('i') || button.querySelector('.play-logo');
-        const actions = {
-            'fa-chart-bar': 'Afficher les statistiques d\'écoute.',
-            'fa-play': 'Lancer la playlist.',
-            'fa-clock': 'Afficher l\'historique ou sauvegardes.'
-        };
-        for (const [cls, msg] of Object.entries(actions)) {
-            if (icon && (icon.classList.contains(cls) || (cls === 'fa-play' && icon.classList.contains('play-logo')))) {
-                alert(msg);
-                break;
-            }
-        }
-    });
-});
-
-// Boutons d'action au-dessus du footer
-['.back-button', '.cross-button', '.check-button', '.bookmark-button'].forEach(selector => {
-    $(selector).addEventListener('click', () => {
-        if (selector === '.check-button') {
-            // Action spécifique pour le bouton "Accepter" (check-button)
-            loadNextMusic(); // Charger la musique suivante sans démarrer la lecture
-        } else if (selector === '.cross-button') {
-            // Action spécifique pour le bouton "Rejeter" (cross-button)
-            loadNextMusic(); // Charger la musique suivante sans démarrer la lecture
-        } else {
-            // Actions pour les autres boutons
-            const actions = {
-                '.back-button': 'Retour à la page précédente.',
-                '.bookmark-button': 'Article sauvegardé dans les favoris.'
-            };
-            alert(actions[selector]);
-        }
-    });
-});
-
-
-// Variables pour la rotation avec inertie
+// Variables pour la rotation de l'image
 let isDragging = false, startAngle = 0, userRotation = 0, autoRotation = 0, velocity = 0;
 let lastAngle = 0, lastTime = 0, animationFrameId = null, autoRotateAnimationId = null;
 let autoRotateEnabled = false, lastAutoRotateTime = null;
 
-// Sélectionner l'image et son conteneur
-const imageContainer = $('.image-container');
-const centralImage = $('.central-image');
-const playButtonOverlay = $('.play-button-overlay');
-const playButtonAbsolute = $('.play-button-absolute');
-let audioElement = new Audio(); // Initialisé sans source
-audioElement.loop = true;
-
-let isPlaying = false;
-
-// Sélectionner les éléments du lecteur MP3
-const progressBar = $('#progress-bar');
-const currentTimeEl = $('.current-time');
-const remainingTimeEl = $('.remaining-time');
-
-// Fonction pour calculer l'angle entre le centre et la position du pointeur
-const getAngle = (x, y, centerX, centerY) => Math.atan2(y - centerY, x - centerX) * (180 / Math.PI);
-
-// Fonction pour mettre à jour la rotation de l'image
+// Fonction pour mettre à jour la transformation de l'image
 const updateTransform = () => {
     centralImage.style.transform = `rotate(${userRotation + autoRotation}deg)`;
 };
 
-// Gestion du drag
+// Fonction pour calculer l'angle entre le centre et la position du pointeur
+const getAngle = (x, y, centerX, centerY) => Math.atan2(y - centerY, x - centerX) * (180 / Math.PI);
+
+// Gestion du drag pour la rotation de l'image
 const startDrag = e => {
     const rect = centralImage.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
@@ -174,20 +96,16 @@ const endDrag = () => {
 const startAudio = () => {
     audioElement.play();
     isPlaying = true;
-    $('.lyrics-container').classList.add('visible'); // Afficher les paroles
-    
-    // Enlever le filtre noir et blanc
-    centralImage.classList.add('colored');
+    lyricsContainer.classList.add('visible'); // Afficher les paroles
+    centralImage.classList.add('colored'); // Enlever le filtre noir et blanc
 };
 
 // Fonction pour arrêter l'audio
 const stopAudio = () => {
     audioElement.pause();
     isPlaying = false;
-    $('.lyrics-container').classList.remove('visible'); // Masquer les paroles
-    
-    // Réappliquer le filtre noir et blanc
-    centralImage.classList.remove('colored');
+    lyricsContainer.classList.remove('visible'); // Masquer les paroles
+    centralImage.classList.remove('colored'); // Réappliquer le filtre noir et blanc
 };
 
 // Fonction pour mettre à jour le playbackRate
@@ -224,11 +142,11 @@ const autoRotate = timestamp => {
     autoRotateAnimationId = requestAnimationFrame(autoRotate);
 };
 
-// Fonction qui gère le play/pause pour les deux boutons
+// Fonction pour gérer le play/pause pour les deux boutons
 const handlePlayPause = () => {
     if (!isPlaying) {
         startAudio();
-        $('.play-button-overlay i').classList.replace('fa-play', 'fa-pause');
+        playButtonOverlay.querySelector('i').classList.replace('fa-play', 'fa-pause');
         playButtonAbsolute.querySelector('i').classList.replace('fa-play', 'fa-pause');
         toggleReducedState(true);
         if (!autoRotateAnimationId) {
@@ -238,7 +156,7 @@ const handlePlayPause = () => {
         }
     } else {
         stopAudio();
-        $('.play-button-overlay i').classList.replace('fa-pause', 'fa-play');
+        playButtonOverlay.querySelector('i').classList.replace('fa-pause', 'fa-play');
         playButtonAbsolute.querySelector('i').classList.replace('fa-pause', 'fa-play');
         toggleReducedState(false);
         if (autoRotateAnimationId) {
@@ -252,12 +170,13 @@ const handlePlayPause = () => {
     }
 };
 
-// Ajouter les écouteurs pour les événements pointer
+// Gestion des évènements de rotation
+const imageContainer = $('.image-container');
 imageContainer.addEventListener('pointerdown', startDrag);
 document.addEventListener('pointermove', duringDrag);
 document.addEventListener('pointerup', endDrag);
 
-// Ajouter les écouteurs pour les deux boutons
+// Gestion des clics sur les boutons de lecture
 playButtonOverlay.addEventListener('click', handlePlayPause);
 playButtonAbsolute.addEventListener('click', handlePlayPause);
 
@@ -298,7 +217,7 @@ window.addEventListener('scroll', () => {
 
 // Lorsque la musique se termine
 audioElement.addEventListener('ended', () => {
-    $('.play-button-overlay i').classList.replace('fa-pause', 'fa-play');
+    playButtonOverlay.querySelector('i').classList.replace('fa-pause', 'fa-play');
     playButtonAbsolute.querySelector('i').classList.replace('fa-pause', 'fa-play');
     toggleReducedState(false);
     if (autoRotateAnimationId) {
@@ -310,7 +229,7 @@ audioElement.addEventListener('ended', () => {
     autoRotation = 0;
     updateTransform();
     // Optionnel : Passer à la musique suivante automatiquement
-    loadNextMusic(); // Cette ligne déclenchera le chargement de la musique suivante sans la jouer
+    loadNextMusic(); // Charger la musique suivante sans la jouer
 });
 
 // Mettre à jour la barre de progression et les temps
@@ -372,7 +291,7 @@ const loadLyrics = (lyricContent) => {
     renderLyrics(lyrics);
     // Afficher les paroles uniquement si la musique est en cours de lecture
     if (isPlaying) {
-        $('.lyrics-container').classList.add('visible');
+        lyricsContainer.classList.add('visible');
     }
 };
 
@@ -402,8 +321,7 @@ const parseLRC = (lrcText) => {
 
 // Fonction pour rendre les paroles dans le DOM
 const renderLyrics = (lyrics) => {
-    const lyricsContainer = $('.lyrics');
-    lyricsContainer.innerHTML = ''; // Réinitialiser les paroles
+    lyricsElement.innerHTML = ''; // Réinitialiser les paroles
 
     lyrics.forEach((line, index) => {
         const lineElement = document.createElement('div');
@@ -417,7 +335,7 @@ const renderLyrics = (lyrics) => {
             updateLyricsDisplay(line.time);
         });
 
-        lyricsContainer.appendChild(lineElement);
+        lyricsElement.appendChild(lineElement);
     });
 
     // Afficher la première ligne comme future si aucune lecture n'a commencé
@@ -432,15 +350,17 @@ const updateLyricsDisplay = (currentTime) => {
     if (lyrics.length === 0) return;
 
     // Trouver l'index de la ligne actuelle
+    let found = false;
     for (let i = 0; i < lyrics.length; i++) {
         if (currentTime < lyrics[i].time) {
             currentLyricIndex = i - 1;
+            found = true;
             break;
         }
     }
 
     // Si on est à la fin des paroles
-    if (currentTime >= lyrics[lyrics.length - 1].time) {
+    if (!found) {
         currentLyricIndex = lyrics.length - 1;
     }
 
@@ -479,12 +399,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Fonction pour récupérer les musiques depuis le backend
 const fetchMusics = async () => {
+    console.log('Fetching musics...');
     try {
         const response = await fetch(`${API_URL}/musics`);
+        console.log('Response status:', response.status);
         if (!response.ok) {
             throw new Error('Erreur lors de la récupération des musiques');
         }
         const musics = await response.json();
+        console.log('Musics fetched:', musics);
         musicsList = musics;
         if (musicsList.length > 0) {
             currentMusicIndex = 0;
@@ -507,20 +430,21 @@ const setMusicDetails = (index) => {
     const music = musicsList[index];
     // Mettre à jour l'interface avec les détails de la musique
     centralImage.src = music.coverImage;
-    $('.title').innerHTML = `${music.title}<br><p class="date">${new Date(music.createdAt).toLocaleDateString()}</p>`;
-    $('.subtitle').textContent = music.artist;
+    titleElement.innerHTML = `${music.title}<br><p class="date">${new Date(music.createdAt).toLocaleDateString()}</p>`;
+    subtitleElement.textContent = music.artist;
     audioElement.src = music.audioUrl;
     // Charger les paroles
     if (music.lyrics && music.lyrics.content) {
         loadLyrics(music.lyrics.content);
     } else {
-        $('.lyrics-container').classList.remove('visible');
-        $('.lyrics').innerHTML = '<p>Aucune parole disponible.</p>';
+        lyricsContainer.classList.remove('visible');
+        lyricsElement.innerHTML = '<p>Aucune parole disponible.</p>';
     }
     // Mettre à jour les boutons de lecture
-    $('.play-button-overlay i').classList.replace('fa-pause', 'fa-play');
+    playButtonOverlay.querySelector('i').classList.replace('fa-pause', 'fa-play');
     playButtonAbsolute.querySelector('i').classList.replace('fa-pause', 'fa-play');
-    // Ne pas appeler toggleReducedState ni startAudio ici
+    // Mettre à jour l'état du bouton Bookmark
+    updateBookmarkButton();
 };
 
 // Fonction pour charger une musique par son index sans démarrer la lecture ou modifier l'interface
@@ -532,17 +456,18 @@ const loadMusicByIndex = (index) => {
     const music = musicsList[index];
     // Mettre à jour l'interface avec les détails de la musique
     centralImage.src = music.coverImage;
-    $('.title').innerHTML = `${music.title}<br><p class="date">${new Date(music.createdAt).toLocaleDateString()}</p>`;
-    $('.subtitle').textContent = music.artist;
+    titleElement.innerHTML = `${music.title}<br><p class="date">${new Date(music.createdAt).toLocaleDateString()}</p>`;
+    subtitleElement.textContent = music.artist;
     audioElement.src = music.audioUrl;
     // Charger les paroles
     if (music.lyrics && music.lyrics.content) {
         loadLyrics(music.lyrics.content);
     } else {
-        $('.lyrics-container').classList.remove('visible');
-        $('.lyrics').innerHTML = '<p>Aucune parole disponible.</p>';
+        lyricsContainer.classList.remove('visible');
+        lyricsElement.innerHTML = '<p>Aucune parole disponible.</p>';
     }
-    // Ne pas modifier les boutons de lecture ou l'interface ici
+    // Mettre à jour l'état du bouton Bookmark
+    updateBookmarkButton();
 };
 
 // Fonction pour charger la musique suivante sans démarrer la lecture
@@ -559,7 +484,6 @@ const loadNextMusic = () => {
     loadMusicByIndex(currentMusicIndex);
 
     // Ne pas démarrer la lecture automatiquement
-    // Ne pas appeler toggleReducedState(true)
 };
 
 // Fonction pour jouer la musique suivante automatiquement (si souhaité)
@@ -596,35 +520,137 @@ const playPreviousMusic = () => {
     loadMusicByIndex(currentMusicIndex);
 
     // Ne pas démarrer la lecture automatiquement
-    // Ne pas appeler toggleReducedState(true)
 };
 
-// Gestion de la lecture/pausing via les boutons play/pause absolus
-playButtonAbsolute.addEventListener('click', handlePlayPause);
+// Fonction pour mettre à jour l'interface en mode réduit ou non
+const toggleReducedState = (shouldReduce) => {
+    const imageContainer = $('.image-container');
+    const categories = $('.categories');
+    const actionButtons = $('.action-buttons');
+    const rightOverlay = $('.right-overlay');
+    const absolutePlayButton = $('.play-button-absolute');
+    const audioPlayer = $('.audio-player');
+    const mainContent = $('.main-content'); // Sélectionner main-content
 
-// Gestion du lecteur audio en fonction des interactions
-audioElement.addEventListener('play', () => {
-    isPlaying = true;
-    $('.play-button-overlay i').classList.replace('fa-play', 'fa-pause');
-    playButtonAbsolute.querySelector('i').classList.replace('fa-play', 'fa-pause');
-    toggleReducedState(true);
-    if (!autoRotateAnimationId) {
-        autoRotateEnabled = true;
-        lastAutoRotateTime = null;
-        autoRotateAnimationId = requestAnimationFrame(autoRotate);
+    if (shouldReduce) {
+        imageContainer.classList.add('reduced');
+        categories.classList.add('hidden');
+        actionButtons.classList.add('hidden');
+        rightOverlay.classList.add('hidden');
+        absolutePlayButton.classList.add('visible');
+        audioPlayer.classList.add('visible');
+        mainContent.classList.add('reduced-padding'); // Ajouter la classe
+    } else {
+        imageContainer.classList.remove('reduced');
+        categories.classList.remove('hidden');
+        actionButtons.classList.remove('hidden');
+        rightOverlay.classList.remove('hidden');
+        absolutePlayButton.classList.remove('visible');
+        audioPlayer.classList.remove('visible');
+        mainContent.classList.remove('reduced-padding'); // Supprimer la classe
+        // S'assurer que les boutons reviennent à leur état initial
+        playButtonOverlay.querySelector('i').classList.replace('fa-pause', 'fa-play');
+        playButtonAbsolute.querySelector('i').classList.replace('fa-pause', 'fa-play');
+        // Réappliquer le filtre noir et blanc lorsque l'état est réduit
+        centralImage.classList.remove('colored');
     }
+};
+
+// Gestion du bouton Paramètres
+settingsButton.addEventListener('click', () => {
+    alert('Accéder aux paramètres de l\'application.');
 });
 
-audioElement.addEventListener('pause', () => {
-    isPlaying = false;
-    $('.play-button-overlay i').classList.replace('fa-pause', 'fa-play');
-    playButtonAbsolute.querySelector('i').classList.replace('fa-pause', 'fa-play');
-    toggleReducedState(false);
-    if (autoRotateAnimationId) {
-        cancelAnimationFrame(autoRotateAnimationId);
-        autoRotateAnimationId = null;
-        autoRotateEnabled = false;
-    }
+// Gestion des boutons Catégories
+categoryButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        const category = button.textContent.trim();
+        alert(`Afficher les nouvelles de la catégorie : ${category}`);
+        // Implémentez le filtrage des musiques par catégorie ici
+    });
 });
 
+// Gestion des boutons de la barre de navigation
+navButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        const icon = button.querySelector('i') || button.querySelector('.play-logo');
+        const actions = {
+            'fa-chart-bar': 'Afficher les statistiques d\'écoute.',
+            'fa-play': 'Lancer la playlist.',
+            'fa-clock': 'Afficher l\'historique ou sauvegardes.'
+        };
+        for (const [cls, msg] of Object.entries(actions)) {
+            if (icon && (icon.classList.contains(cls) || (cls === 'fa-play' && icon.classList.contains('play-logo')))) {
+                alert(msg);
+                break;
+            }
+        }
+    });
+});
 
+// Gestion des boutons d'action au-dessus du footer (back, cross, check)
+['.back-button', '.cross-button', '.check-button'].forEach(selector => {
+    $(selector).addEventListener('click', () => {
+        if (selector === '.check-button') {
+            // Action spécifique pour le bouton "Accepter" (check-button)
+            loadNextMusic(); // Charger la musique suivante sans démarrer la lecture
+        } else if (selector === '.cross-button') {
+            // Action spécifique pour le bouton "Rejeter" (cross-button)
+            loadNextMusic(); // Charger la musique suivante sans démarrer la lecture
+        } else if (selector === '.back-button') {
+            // Action pour le bouton "Retour"
+            alert('Retour à la page précédente.');
+        }
+    });
+});
+
+// Fonction pour obtenir les bookmarks depuis le localStorage
+const getBookmarks = () => {
+    const bookmarks = localStorage.getItem('bookmarks');
+    return bookmarks ? JSON.parse(bookmarks) : [];
+};
+
+// Fonction pour mettre à jour l'icône du bouton Bookmark en fonction de l'état
+const updateBookmarkButton = () => {
+    const currentMusic = musicsList[currentMusicIndex];
+    if (!currentMusic) return;
+
+    const bookmarks = getBookmarks();
+    const isBookmarked = bookmarks.some(music => music._id === currentMusic._id);
+
+    if (isBookmarked) {
+        bookmarkButtonImg.src = 'images/bookmark-fill.svg';
+    } else {
+        bookmarkButtonImg.src = 'images/bookmark.svg';
+    }
+};
+
+// Gestionnaire d'événements pour le bouton Bookmark
+bookmarkButtonImg.addEventListener('click', () => {
+    const currentMusic = musicsList[currentMusicIndex];
+    if (!currentMusic) return;
+
+    const bookmarks = getBookmarks();
+    const isBookmarked = bookmarks.some(music => music._id === currentMusic._id);
+
+    if (isBookmarked) {
+        // Si déjà bookmarkée, la retirer
+        const updatedBookmarks = bookmarks.filter(music => music._id !== currentMusic._id);
+        localStorage.setItem('bookmarks', JSON.stringify(updatedBookmarks));
+        bookmarkButtonImg.src = 'images/bookmark.svg';
+    } else {
+        // Sinon, l'ajouter
+        bookmarks.push(currentMusic);
+        localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+        bookmarkButtonImg.src = 'images/bookmark-fill.svg';
+    }
+
+    // Mettre à jour l'état visuel du bouton
+    updateBookmarkButton();
+});
+
+// Fonction pour charger et afficher les bookmarks (Optionnel pour les prochaines étapes)
+const loadBookmarks = () => {
+    // Pour l'instant, cette fonction est vide car nous n'avons pas de section pour afficher les bookmarks
+    // Tu pourras l'utiliser pour ajouter une fonctionnalité d'affichage des bookmarks plus tard
+};
