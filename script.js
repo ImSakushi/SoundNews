@@ -392,9 +392,39 @@ audioElement.addEventListener('timeupdate', () => {
     updateLyricsDisplay(currentTime);
 });
 
-// Charger les musiques au démarrage
+const getURLParams = () => {
+    const params = new URLSearchParams(window.location.search);
+    return {
+        musicId: params.get('musicId')
+    };
+};
+
+// Fonction pour jouer une musique spécifique basée sur l'ID
+const playMusicById = (musicId) => {
+    const index = musicsList.findIndex(m => m._id === musicId);
+    if (index !== -1) {
+        currentMusicIndex = index;
+        setMusicDetails(currentMusicIndex);
+        handlePlayPause(); // Démarrer la lecture
+    } else {
+        console.error('Musique avec l\'ID spécifié non trouvée.');
+    }
+};
+
+// Gestion des paramètres au chargement de la page
 document.addEventListener('DOMContentLoaded', () => {
     fetchMusics(); // Charger les musiques au chargement
+
+    const params = getURLParams();
+    if (params.musicId) {
+        // Attendre que les musiques soient chargées avant de jouer
+        const checkMusicsLoaded = setInterval(() => {
+            if (musicsList.length > 0) {
+                playMusicById(params.musicId);
+                clearInterval(checkMusicsLoaded);
+            }
+        }, 100);
+    }
 });
 
 // Fonction pour récupérer les musiques depuis le backend
@@ -571,16 +601,28 @@ categoryButtons.forEach(button => {
 });
 
 // Gestion des boutons de la barre de navigation
-navButtons.forEach(button => {
+// Sélectionner le bouton Discothèque
+const discothequeButton = $('#discotheque-button');
+
+// Ajouter un gestionnaire d'événements pour rediriger vers bookmark.html
+discothequeButton.addEventListener('click', () => {
+    window.location.href = 'bookmark.html';
+});
+
+// Gestionnaire d'événements pour les autres boutons de navigation
+$$('.nav-button').forEach(button => {
+    // Ignorer le bouton Discothèque déjà géré
+    if (button.id === 'discotheque-button') return;
+
     button.addEventListener('click', () => {
         const icon = button.querySelector('i') || button.querySelector('.play-logo');
         const actions = {
             'fa-chart-bar': 'Afficher les statistiques d\'écoute.',
             'fa-play': 'Lancer la playlist.',
-            'fa-clock': 'Afficher l\'historique ou sauvegardes.'
+            'fa-bookmark': 'Afficher vos bookmarks.'
         };
         for (const [cls, msg] of Object.entries(actions)) {
-            if (icon && (icon.classList.contains(cls) || (cls === 'fa-play' && icon.classList.contains('play-logo')))) {
+            if (icon && icon.classList.contains(cls)) {
                 alert(msg);
                 break;
             }

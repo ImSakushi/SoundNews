@@ -632,8 +632,8 @@ body, html {
 .music-item {
   display: flex;
   align-items: center;
-  background-color: #2E2E2E;
   padding: 10px;
+  margin-bottom: 2rem;
   border-radius: 10px;
   transition: background-color 0.3s;
 }
@@ -877,4 +877,52 @@ body, html {
 .overlay-text i {
   color: var(--accent-yellow);
   margin-left: 5px;
+}
+
+.right-overlay.bookmark  {
+  height: 100%;
+}
+
+.action-buttons.bookmark {
+  display: none;
+}
+
+.page-title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: var(--accent-white);
+  text-transform: uppercase;
+}
+
+/* 2. Styles pour les boutons Dropdown "Filtrer" et "Trier" */
+.dropdown-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.dropdown-button {
+  background-color: #323232;
+  border: 1.5px solid var(--accent-white);
+  color: var(--accent-white);
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background-color 0.3s, transform 0.3s;
+  font-family: "DM Sans", sans-serif;
+}
+
+.dropdown-button:hover {
+  background-color: var(--button-hover);
+  transform: scale(1.05);
+}
+
+.footer-container.transparent-container {
+  background-color: rgba(49, 49, 49, 0.7); /* Fond semi-transparent */
+  /* Vous pouvez ajuster l'opacité selon vos préférences */
 }
