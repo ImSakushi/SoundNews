@@ -1,6 +1,12 @@
 // preferences.js
 
 document.addEventListener('DOMContentLoaded', () => {
+    const preferencesSet = getCookie('preferencesSet');
+    if (preferencesSet === 'true') {
+        // Rediriger vers index.html si les préférences sont déjà définies
+        window.location.href = 'index.html';
+        return;
+    }
     const categoryContainer = document.querySelector('.categories-container');
     const categoryButtons = () => document.querySelectorAll('.categories-container .category-button');
     const motivationText = document.querySelector('.motivation-text p');
@@ -73,9 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 console.log('Catégories sélectionnées :', selectedCategories);
 
-                // Stocker les catégories sélectionnées (localStorage, backend, etc.)
-                // Exemple avec localStorage :
-                localStorage.setItem('selectedCategories', JSON.stringify(selectedCategories));
+                // Stocker les catégories sélectionnées dans un cookie (validité de 30 jours)
+                setCookie('selectedCategories', JSON.stringify(selectedCategories), 30);
+
+                // Définir un cookie indiquant que les préférences ont été définies
+                setCookie('preferencesSet', 'true', 30);
 
                 // Afficher l'overlay avec les messages
                 showWelcomeOverlay();
@@ -96,12 +104,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Afficher le premier texte après un court délai
         setTimeout(() => {
             text1.classList.add('visible');
-        }, 500); // Délai avant l'apparition du premier texte (0.5s)
+        }, 500); // 500ms
 
         // Afficher le second texte après que le premier soit visible pendant 2s
         setTimeout(() => {
             text2.classList.add('visible');
-        }, 2500); // 500ms (fade-in) + 2000ms (affiché)
+        }, 2500); // 500ms + 2000ms
 
         // Afficher le troisième texte après que le second soit visible pendant 2s
         setTimeout(() => {

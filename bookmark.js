@@ -21,8 +21,13 @@ backButton.addEventListener('click', () => {
 
 // Fonction pour obtenir les bookmarks depuis le localStorage
 const getBookmarks = () => {
-    const bookmarks = localStorage.getItem('bookmarks');
-    return bookmarks ? JSON.parse(bookmarks) : [];
+    const bookmarksCookie = getCookie('bookmarks');
+    return bookmarksCookie ? JSON.parse(bookmarksCookie) : [];
+};
+
+// Fonction pour sauvegarder les bookmarks dans les cookies (si besoin)
+const saveBookmarks = (bookmarks) => {
+    setCookie('bookmarks', JSON.stringify(bookmarks), 30);
 };
 
 // Fonction pour rendre les bookmarks dans le DOM
@@ -82,11 +87,26 @@ const renderBookmarks = () => {
             window.location.href = `index.html?musicId=${music._id}`;
         });
 
+        // Bouton pour retirer le bookmark
+        const removeBookmarkButton = document.createElement('button');
+        removeBookmarkButton.classList.add('remove-bookmark-button');
+        removeBookmarkButton.setAttribute('aria-label', 'Retirer du Bookmark');
+        removeBookmarkButton.innerHTML = '<i class="fas fa-trash"></i>';
+
+        // Gestionnaire d'événements pour retirer le bookmark
+        removeBookmarkButton.addEventListener('click', () => {
+            let bookmarks = getBookmarks();
+            bookmarks = bookmarks.filter(m => m._id !== music._id);
+            saveBookmarks(bookmarks);
+            renderBookmarks(); // Rafraîchir la liste des bookmarks
+        });
+
         // Assembler les éléments
         imageContainer.appendChild(coverImage);
         imageContainer.appendChild(overlayCircle);
         imageContainer.appendChild(rightOverlay);
-        rightOverlay.appendChild(playButtonOverlay); // Déplacer le bouton Play dans right-overlay
+        rightOverlay.appendChild(playButtonOverlay);
+        rightOverlay.appendChild(removeBookmarkButton); // Ajouter le bouton de suppression
 
         // Ajouter l'imageContainer au musicItem
         musicItem.appendChild(imageContainer);
@@ -98,5 +118,13 @@ const renderBookmarks = () => {
 
 // Charger et afficher les bookmarks au chargement de la page
 document.addEventListener('DOMContentLoaded', () => {
+    // Vérifier si les préférences sont définies
+    const preferencesSet = getCookie('preferencesSet');
+    if (preferencesSet !== 'true') {
+        // Rediriger vers preferences.html si les préférences ne sont pas définies
+        window.location.href = 'preferences.html';
+        return;
+    }
+
     renderBookmarks();
 });

@@ -506,7 +506,7 @@ body, html {
 /* Container des paroles synchronisées */
 .lyrics-container {
   position: fixed;
-  top: 55%; /* Ajusté pour mieux positionner les paroles */
+  top: 65%; /* Ajusté pour mieux positionner les paroles */
   left: 50%;
   transform: translate(-50%, -50%);
   width: 100%;

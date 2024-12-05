@@ -1,5 +1,8 @@
 // script.js
 
+// Inclure les fonctions de gestion des cookies
+// Assurez-vous que cookieUtils.js est inclus avant script.js dans votre index.html
+
 // Fonction utilitaire pour sélectionner les éléments
 const $ = selector => document.querySelector(selector);
 const $$ = selector => document.querySelectorAll(selector);
@@ -415,6 +418,13 @@ const playMusicById = (musicId) => {
 
 // Gestion des paramètres au chargement de la page
 document.addEventListener('DOMContentLoaded', () => {
+    const preferencesSet = getCookie('preferencesSet');
+    if (preferencesSet !== 'true') {
+        // Rediriger vers preferences.html si les préférences ne sont pas définies
+        window.location.href = 'preferences.html';
+        return;
+    }
+
     fetchMusics(); // Charger les musiques au chargement
 
     const params = getURLParams();
@@ -434,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ajouter la classe 'visible' après un court délai pour déclencher l'animation
     setTimeout(() => {
         fadeElements.forEach(el => el.classList.add('visible'));
-    }, 100); // Délai de 100ms pour assurer que les éléments sont prêts pour la transition
+    }, 100); // 100ms
 });
 
 // Fonction pour récupérer les musiques depuis le backend
@@ -462,6 +472,33 @@ const fetchMusics = async () => {
 };
 
 // Fonction pour définir les détails d'une musique sans jouer
+const getBookmarks = () => {
+    const bookmarksCookie = getCookie('bookmarks');
+    return bookmarksCookie ? JSON.parse(bookmarksCookie) : [];
+};
+
+// Fonction pour sauvegarder les bookmarks dans les cookies
+const saveBookmarks = (bookmarks) => {
+    // Convertir l'objet en chaîne JSON et stocker dans un cookie (validité de 30 jours)
+    setCookie('bookmarks', JSON.stringify(bookmarks), 30);
+};
+
+// **Définir updateBookmarkButton avant de l'utiliser**
+const updateBookmarkButton = () => {
+    const currentMusic = musicsList[currentMusicIndex];
+    if (!currentMusic) return;
+
+    const bookmarks = getBookmarks();
+    const isBookmarked = bookmarks.some(music => music._id === currentMusic._id);
+
+    if (isBookmarked) {
+        bookmarkButtonImg.src = 'images/bookmark-fill.svg';
+    } else {
+        bookmarkButtonImg.src = 'images/bookmark.svg';
+    }
+};
+
+// Fonction pour définir les détails d'une musique sans jouer
 const setMusicDetails = (index) => {
     if (index < 0 || index >= musicsList.length) {
         alert('Index de musique invalide.');
@@ -483,9 +520,10 @@ const setMusicDetails = (index) => {
     // Mettre à jour les boutons de lecture
     playButtonOverlay.querySelector('i').classList.replace('fa-pause', 'fa-play');
     playButtonAbsolute.querySelector('i').classList.replace('fa-pause', 'fa-play');
-    // Mettre à jour l'état du bouton Bookmark
+    // **Appeler updateBookmarkButton ici**
     updateBookmarkButton();
 };
+
 
 // Fonction pour charger une musique par son index sans démarrer la lecture ou modifier l'interface
 const loadMusicByIndex = (index) => {
@@ -642,67 +680,19 @@ $$('.nav-button').forEach(button => {
 
 // Gestion des boutons d'action au-dessus du footer (back, cross, check)
 ['.back-button', '.cross-button', '.check-button'].forEach(selector => {
-    $(selector).addEventListener('click', () => {
-        if (selector === '.check-button') {
-            // Action spécifique pour le bouton "Accepter" (check-button)
-            loadNextMusic(); // Charger la musique suivante sans démarrer la lecture
-        } else if (selector === '.cross-button') {
-            // Action spécifique pour le bouton "Rejeter" (cross-button)
-            loadNextMusic(); // Charger la musique suivante sans démarrer la lecture
-        } else if (selector === '.back-button') {
-            // Action pour le bouton "Retour"
-            alert('Retour à la page précédente.');
-        }
-    });
-});
-
-// Fonction pour obtenir les bookmarks depuis le localStorage
-const getBookmarks = () => {
-    const bookmarks = localStorage.getItem('bookmarks');
-    return bookmarks ? JSON.parse(bookmarks) : [];
-};
-
-// Fonction pour mettre à jour l'icône du bouton Bookmark en fonction de l'état
-const updateBookmarkButton = () => {
-    const currentMusic = musicsList[currentMusicIndex];
-    if (!currentMusic) return;
-
-    const bookmarks = getBookmarks();
-    const isBookmarked = bookmarks.some(music => music._id === currentMusic._id);
-
-    if (isBookmarked) {
-        bookmarkButtonImg.src = 'images/bookmark-fill.svg';
-    } else {
-        bookmarkButtonImg.src = 'images/bookmark.svg';
+    const button = $(selector);
+    if (button) {
+        button.addEventListener('click', () => {
+            if (selector === '.check-button') {
+                // Action spécifique pour le bouton "Accepter" (check-button)
+                loadNextMusic(); // Charger la musique suivante sans démarrer la lecture
+            } else if (selector === '.cross-button') {
+                // Action spécifique pour le bouton "Rejeter" (cross-button)
+                loadNextMusic(); // Charger la musique suivante sans démarrer la lecture
+            } else if (selector === '.back-button') {
+                // Action pour le bouton "Retour"
+                alert('Retour à la page précédente.');
+            }
+        });
     }
-};
-
-// Gestionnaire d'événements pour le bouton Bookmark
-bookmarkButtonImg.addEventListener('click', () => {
-    const currentMusic = musicsList[currentMusicIndex];
-    if (!currentMusic) return;
-
-    const bookmarks = getBookmarks();
-    const isBookmarked = bookmarks.some(music => music._id === currentMusic._id);
-
-    if (isBookmarked) {
-        // Si déjà bookmarkée, la retirer
-        const updatedBookmarks = bookmarks.filter(music => music._id !== currentMusic._id);
-        localStorage.setItem('bookmarks', JSON.stringify(updatedBookmarks));
-        bookmarkButtonImg.src = 'images/bookmark.svg';
-    } else {
-        // Sinon, l'ajouter
-        bookmarks.push(currentMusic);
-        localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
-        bookmarkButtonImg.src = 'images/bookmark-fill.svg';
-    }
-
-    // Mettre à jour l'état visuel du bouton
-    updateBookmarkButton();
 });
-
-// Fonction pour charger et afficher les bookmarks (Optionnel pour les prochaines étapes)
-const loadBookmarks = () => {
-    // Pour l'instant, cette fonction est vide car nous n'avons pas de section pour afficher les bookmarks
-    // Tu pourras l'utiliser pour ajouter une fonctionnalité d'affichage des bookmarks plus tard
-};
