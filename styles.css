@@ -844,7 +844,7 @@ body, html {
   align-items: center;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.5s ease, visibility 0.5s ease;
+  transition: opacity 0.5s ease, visibility 0.5s ease, background-color 1s ease; /* Ajout de transition pour background-color */
   z-index: 1000; /* Assure que l'overlay est au-dessus de tout */
 }
 
@@ -853,6 +853,9 @@ body, html {
   visibility: visible;
 }
 
+.overlay.changed-color {
+  background-color: #1A1A1A; /* Nouvelle couleur après le changement */
+}
 /* Contenu de l'Overlay */
 .overlay-content {
   text-align: center;
@@ -925,4 +928,15 @@ body, html {
 .footer-container.transparent-container {
   background-color: rgba(49, 49, 49, 0.7); /* Fond semi-transparent */
   /* Vous pouvez ajuster l'opacité selon vos préférences */
+}
+
+.fade-in-element {
+  opacity: 0;
+  transform: translateY(20px); /* Optionnel : effet de décalage vers le bas */
+  transition: opacity 1s ease, transform 1s ease;
+}
+
+.fade-in-element.visible {
+  opacity: 1;
+  transform: translateY(0);
 }

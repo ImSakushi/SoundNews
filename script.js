@@ -1,3 +1,5 @@
+// script.js
+
 // Fonction utilitaire pour sélectionner les éléments
 const $ = selector => document.querySelector(selector);
 const $$ = selector => document.querySelectorAll(selector);
@@ -425,6 +427,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 100);
     }
+
+    // Gestion des animations de fade-in
+    const fadeElements = document.querySelectorAll('.fade-in-element');
+
+    // Ajouter la classe 'visible' après un court délai pour déclencher l'animation
+    setTimeout(() => {
+        fadeElements.forEach(el => el.classList.add('visible'));
+    }, 100); // Délai de 100ms pour assurer que les éléments sont prêts pour la transition
 });
 
 // Fonction pour récupérer les musiques depuis le backend

@@ -33,7 +33,7 @@ const renderBookmarks = () => {
     bookmarksListContainer.innerHTML = '';
 
     if (bookmarks.length === 0) {
-        bookmarksListContainer.innerHTML = '<p>Aucun bookmark pour le moment.</p>';
+        bookmarksListContainer.innerHTML = '<p>Votre discothèque est vide.</p>';
         return;
     }
 

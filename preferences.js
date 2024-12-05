@@ -120,6 +120,11 @@ document.addEventListener('DOMContentLoaded', () => {
             text3.classList.add('fade-out');
         }, 6500); // 500ms + 2000ms + 2000ms + 2000ms
 
+        // Changer la couleur de l'overlay après le fade-out des textes
+        setTimeout(() => {
+            overlay.classList.add('changed-color');
+        }, 6500); // Simultanément avec le fade-out
+
         // Rediriger après que les textes aient disparu plus un petit délai
         setTimeout(() => {
             window.location.href = 'index.html';
