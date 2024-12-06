@@ -20,14 +20,15 @@ backButton.addEventListener('click', () => {
 });
 
 // Fonction pour obtenir les bookmarks depuis le localStorage
+// Fonction pour obtenir les bookmarks depuis localStorage
 const getBookmarks = () => {
-    const bookmarksCookie = getCookie('bookmarks');
-    return bookmarksCookie ? JSON.parse(bookmarksCookie) : [];
+    const bookmarks = localStorage.getItem('bookmarks');
+    return bookmarks ? JSON.parse(bookmarks) : [];
 };
 
-// Fonction pour sauvegarder les bookmarks dans les cookies (si besoin)
+// Fonction pour sauvegarder les bookmarks dans localStorage (si besoin)
 const saveBookmarks = (bookmarks) => {
-    setCookie('bookmarks', JSON.stringify(bookmarks), 30);
+    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
 };
 
 // Fonction pour rendre les bookmarks dans le DOM
@@ -106,7 +107,6 @@ const renderBookmarks = () => {
         imageContainer.appendChild(overlayCircle);
         imageContainer.appendChild(rightOverlay);
         rightOverlay.appendChild(playButtonOverlay);
-        rightOverlay.appendChild(removeBookmarkButton); // Ajouter le bouton de suppression
 
         // Ajouter l'imageContainer au musicItem
         musicItem.appendChild(imageContainer);

@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SoundNews</title>
     <!-- Font Awesome CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
     <!-- Votre feuille de style -->
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -42,24 +42,9 @@
             </div>
 
             <!-- Section des catégories (optionnel) -->
-            <section class="categories fade-in-element">
-                <div class="category-row">
-                    <button class="category-button">
-                        <i class="fas fa-user-shield"></i>
-                        Politique
-                    </button>
-                    <button class="category-button">
-                        <i class="fas fa-chart-line"></i>
-                        Économie
-                    </button>
-                </div>
-                <div class="category-row">
-                    <button class="category-button full-width">
-                        <i class="fas fa-book-open"></i>
-                        Société
-                    </button>
-                </div>
-            </section>
+            <!-- Section des catégories (dynamiquement générées) -->
+            <section class="categories fade-in-element"></section>
+
 
             <!-- Paroles synchronisées -->
             <section class="lyrics-container">
@@ -105,9 +90,9 @@
               <!-- Bouton Statistiques avec label -->
               <div class="nav-item">
                   <button class="nav-button" aria-label="Statistiques">
-                      <i class="fas fa-chart-bar"></i>
+                    <i class="fa-solid fa-arrow-trend-up"></i>
                   </button>
-                  <span class="nav-label">Statistiques</span>
+                  <span class="nav-label">Tendances</span>
               </div>
 
               <!-- Bouton Lire (Play) sans label -->
@@ -129,7 +114,8 @@
 
     </div>
     <!-- Votre script JavaScript -->
-    <script src="script.js"></script>
     <script src="cookieUtils.js"></script>
+    <script src="script.js"></script>
+
 </body>
 </html>

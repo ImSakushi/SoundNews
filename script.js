@@ -21,7 +21,7 @@ let currentMusicIndex = 0;
 
 // Sélectionner les éléments du DOM
 const settingsButton = $('#settings-btn');
-const categoryButtons = $$('.category-button');
+// Les boutons de catégorie sont maintenant dynamiques, donc on ne les sélectionne plus statiquement
 const navButtons = $$('.nav-button');
 const actionButtons = $$('.action-button');
 const bookmarkButtonImg = $('.bookmark-button img'); // L'image dans le bouton Bookmark
@@ -39,6 +39,9 @@ const lyricsElement = $('.lyrics');
 const audioElement = new Audio(); // Élément audio
 audioElement.loop = true;
 
+// Sélectionner le bouton Bookmark
+const bookmarkButton = $('.bookmark-button');
+
 // Variables pour le contrôle de la lecture
 let isPlaying = false;
 
@@ -51,6 +54,29 @@ let autoRotateEnabled = false, lastAutoRotateTime = null;
 const updateTransform = () => {
     centralImage.style.transform = `rotate(${userRotation + autoRotation}deg)`;
 };
+
+// Fonction utilitaire pour s'assurer que category est toujours un tableau
+function ensureCategoryArray(category) {
+    if (Array.isArray(category)) {
+        return category;
+    } else if (typeof category === 'string') {
+        try {
+            const parsed = JSON.parse(category);
+            if (Array.isArray(parsed)) {
+                return parsed;
+            } else {
+                console.warn('Parsed category n\'est pas un tableau:', parsed);
+                return [category];
+            }
+        } catch (e) {
+            console.error('Erreur de parsing de category:', e);
+            return [category];
+        }
+    } else {
+        console.warn('Type inattendu pour category:', typeof category);
+        return [];
+    }
+}
 
 // Fonction pour calculer l'angle entre le centre et la position du pointeur
 const getAngle = (x, y, centerX, centerY) => Math.atan2(y - centerY, x - centerX) * (180 / Math.PI);
@@ -445,6 +471,10 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         fadeElements.forEach(el => el.classList.add('visible'));
     }, 100); // 100ms
+
+    // Ajouter l'écouteur d'événement pour le bookmarkButton ici
+    // Just to ensure that the event listener is attached after DOMContentLoaded
+    bookmarkButton.addEventListener('click', toggleBookmark);
 });
 
 // Fonction pour récupérer les musiques depuis le backend
@@ -458,6 +488,10 @@ const fetchMusics = async () => {
         }
         const musics = await response.json();
         console.log('Musics fetched:', musics);
+        // Assurer que chaque musique a category comme tableau
+        musics.forEach(music => {
+            music.category = ensureCategoryArray(music.category);
+        });
         musicsList = musics;
         if (musicsList.length > 0) {
             currentMusicIndex = 0;
@@ -472,31 +506,112 @@ const fetchMusics = async () => {
 };
 
 // Fonction pour définir les détails d'une musique sans jouer
+// Fonction pour récupérer les bookmarks depuis localStorage
 const getBookmarks = () => {
-    const bookmarksCookie = getCookie('bookmarks');
-    return bookmarksCookie ? JSON.parse(bookmarksCookie) : [];
-};
-
-// Fonction pour sauvegarder les bookmarks dans les cookies
-const saveBookmarks = (bookmarks) => {
-    // Convertir l'objet en chaîne JSON et stocker dans un cookie (validité de 30 jours)
-    setCookie('bookmarks', JSON.stringify(bookmarks), 30);
-};
-
-// **Définir updateBookmarkButton avant de l'utiliser**
-const updateBookmarkButton = () => {
-    const currentMusic = musicsList[currentMusicIndex];
-    if (!currentMusic) return;
-
-    const bookmarks = getBookmarks();
-    const isBookmarked = bookmarks.some(music => music._id === currentMusic._id);
-
-    if (isBookmarked) {
-        bookmarkButtonImg.src = 'images/bookmark-fill.svg';
-    } else {
-        bookmarkButtonImg.src = 'images/bookmark.svg';
+    const bookmarks = localStorage.getItem('bookmarks');
+    if (!bookmarks) return [];
+    try {
+        const parsed = JSON.parse(bookmarks);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+        console.error('Erreur lors du parsing de localStorage bookmarks:', e);
+        return [];
     }
 };
+
+// Fonction pour sauvegarder les bookmarks dans localStorage
+const saveBookmarks = (bookmarks) => {
+    try {
+        const bookmarksJSON = JSON.stringify(bookmarks);
+        localStorage.setItem('bookmarks', bookmarksJSON);
+        console.log('Bookmarks saved:', bookmarks);
+    } catch (e) {
+        console.error('Erreur lors de la sauvegarde des bookmarks:', e);
+    }
+};
+
+
+// Fonction pour mettre à jour le bouton de bookmark
+
+
+// Fonction pour ajouter/retirer la musique actuelle des bookmarks
+const toggleBookmark = () => {
+    const currentMusic = musicsList[currentMusicIndex];
+    console.log("toggleBookmark() appelé");
+    if (!currentMusic) {
+        console.log('Pas de musique courante.');
+        return;
+    }
+    console.log(`Musique courante : ${currentMusic.title}, _id : ${currentMusic._id}`);
+
+    let bookmarks = getBookmarks();
+    console.log("Bookmarks actuels avant:", bookmarks);
+
+    const index = bookmarks.findIndex(m => m._id === currentMusic._id);
+    if (index === -1) {
+        console.log("Cette musique n'est pas encore bookmarkée, on l'ajoute.");
+        bookmarks.push(currentMusic);
+    } else {
+        console.log("Cette musique est déjà bookmarkée, on la retire.");
+        bookmarks.splice(index, 1);
+    }
+
+    saveBookmarks(bookmarks);
+    console.log("Bookmarks après:", getBookmarks());
+
+    updateBookmarkButton();
+};
+
+const updateBookmarkButton = () => {
+    const currentMusic = musicsList[currentMusicIndex];
+    if (!currentMusic) {
+        console.log('Aucune musique courante pour updateBookmarkButton.');
+        return;
+    }
+    const bookmarks = getBookmarks();
+    const isBookmarked = bookmarks.some(m => m._id === currentMusic._id);
+    console.log(`updateBookmarkButton() : ${currentMusic.title} est bookmarké ? ${isBookmarked}`);
+
+    bookmarkButtonImg.src = isBookmarked ? 'images/bookmark-fill.svg' : 'images/bookmark.svg';
+};
+
+// Dictionnaire des icônes pour les catégories
+const categoryIcons = {
+    'Politique': 'fa-user-shield',
+    'Économie': 'fa-chart-line',
+    'Société': 'fa-book-open',
+    'Science': 'fa-flask',
+    'Sécurité': 'fa-shield-alt',
+    'Environnement': 'fa-leaf',
+    'Technologie': 'fa-microchip',
+    'Santé': 'fa-heartbeat',
+    'Culture': 'fa-landmark',
+    'Sport': 'fa-football-ball'
+};
+
+// Fonction utilitaire pour créer un bouton de catégorie
+function createCategoryButton(cat) {
+    const button = document.createElement('button');
+    button.classList.add('category-button');
+
+    const icon = document.createElement('i');
+    const iconClass = categoryIcons[cat] || 'fa-question-circle';
+    icon.classList.add('fas', iconClass);
+
+    const textNode = document.createTextNode(' ' + cat);
+
+    button.appendChild(icon);
+    button.appendChild(textNode);
+
+    // Ajouter un écouteur d'événement sur le bouton
+    button.addEventListener('click', () => {
+        alert(`Afficher les nouvelles de la catégorie : ${cat}`);
+    });
+
+    console.log(`Created category button for: ${cat}`); // Ajouté pour le débogage
+
+    return button;
+}
 
 // Fonction pour définir les détails d'une musique sans jouer
 const setMusicDetails = (index) => {
@@ -505,25 +620,84 @@ const setMusicDetails = (index) => {
         return;
     }
     const music = musicsList[index];
-    // Mettre à jour l'interface avec les détails de la musique
+    
+    console.log('Setting details for music:', music); // Log complet de la musique
+    console.log('Type de category:', typeof music.category);
+    console.log('Category est un tableau:', Array.isArray(music.category));
+
+    // S'assurer que category est un tableau
+    music.category = ensureCategoryArray(music.category);
+    console.log('Category après assurance:', music.category);
+
+    // Continue avec la mise à jour de l'interface
     centralImage.src = music.coverImage;
     titleElement.innerHTML = `${music.title}<br><p class="date">${new Date(music.createdAt).toLocaleDateString()}</p>`;
     subtitleElement.textContent = music.artist;
     audioElement.src = music.audioUrl;
-    // Charger les paroles
+
+    // Charger les paroles si disponibles
     if (music.lyrics && music.lyrics.content) {
         loadLyrics(music.lyrics.content);
     } else {
         lyricsContainer.classList.remove('visible');
         lyricsElement.innerHTML = '<p>Aucune parole disponible.</p>';
     }
-    // Mettre à jour les boutons de lecture
+
+    // Mettre à jour le bouton de bookmark
+    updateBookmarkButton();
+
+    // Génération dynamique des boutons de catégorie
+    const categoriesContainer = $('.categories');
+    categoriesContainer.innerHTML = ''; // Réinitialiser
+
+    // Limiter à 3 catégories
+    const categories = music.category.slice(0, 3);
+    const categoriesCount = categories.length;
+    
+    console.log(`Number of categories for this music: ${categoriesCount}`); // Log du nombre de catégories
+    console.log('Categories:', categories); // Log des catégories
+
+    if (categoriesCount === 1) {
+        // Une seule catégorie, bouton pleine largeur
+        const singleRow = document.createElement('div');
+        singleRow.classList.add('category-row');
+        const button = createCategoryButton(categories[0]);
+        button.classList.add('full-width');
+        singleRow.appendChild(button);
+        categoriesContainer.appendChild(singleRow);
+    } else if (categoriesCount === 2) {
+        // Deux catégories, une seule ligne
+        const row = document.createElement('div');
+        row.classList.add('category-row');
+        categories.forEach(cat => {
+            const button = createCategoryButton(cat);
+            row.appendChild(button);
+        });
+        categoriesContainer.appendChild(row);
+    } else if (categoriesCount === 3) {
+        // Trois catégories, 2 sur la première ligne, 1 pleine largeur sur la deuxième
+        const row1 = document.createElement('div');
+        row1.classList.add('category-row');
+        const button1 = createCategoryButton(categories[0]);
+        const button2 = createCategoryButton(categories[1]);
+        row1.appendChild(button1);
+        row1.appendChild(button2);
+        categoriesContainer.appendChild(row1);
+
+        const row2 = document.createElement('div');
+        row2.classList.add('category-row');
+        const button3 = createCategoryButton(categories[2]);
+        button3.classList.add('full-width');
+        row2.appendChild(button3);
+        categoriesContainer.appendChild(row2);
+    } else {
+        console.warn(`Nombre inattendu de catégories: ${categoriesCount}`); // Log d'avertissement
+    }
+
+    // Remise à zéro des icônes Play/Pause
     playButtonOverlay.querySelector('i').classList.replace('fa-pause', 'fa-play');
     playButtonAbsolute.querySelector('i').classList.replace('fa-pause', 'fa-play');
-    // **Appeler updateBookmarkButton ici**
-    updateBookmarkButton();
 };
-
 
 // Fonction pour charger une musique par son index sans démarrer la lecture ou modifier l'interface
 const loadMusicByIndex = (index) => {
@@ -531,21 +705,8 @@ const loadMusicByIndex = (index) => {
         alert('Index de musique invalide.');
         return;
     }
-    const music = musicsList[index];
-    // Mettre à jour l'interface avec les détails de la musique
-    centralImage.src = music.coverImage;
-    titleElement.innerHTML = `${music.title}<br><p class="date">${new Date(music.createdAt).toLocaleDateString()}</p>`;
-    subtitleElement.textContent = music.artist;
-    audioElement.src = music.audioUrl;
-    // Charger les paroles
-    if (music.lyrics && music.lyrics.content) {
-        loadLyrics(music.lyrics.content);
-    } else {
-        lyricsContainer.classList.remove('visible');
-        lyricsElement.innerHTML = '<p>Aucune parole disponible.</p>';
-    }
-    // Mettre à jour l'état du bouton Bookmark
-    updateBookmarkButton();
+    console.log('Loading music by index:', index, musicsList[index]); // Ajouté pour le débogage
+    setMusicDetails(index);
 };
 
 // Fonction pour charger la musique suivante sans démarrer la lecture
@@ -585,6 +746,7 @@ const playNextMusicAutomatically = () => {
 };
 
 // Fonction pour jouer la musique précédente (si nécessaire)
+// Fonction pour jouer la musique précédente (si nécessaire)
 const playPreviousMusic = () => {
     if (musicsList.length === 0) return;
 
@@ -599,6 +761,7 @@ const playPreviousMusic = () => {
 
     // Ne pas démarrer la lecture automatiquement
 };
+
 
 // Fonction pour mettre à jour l'interface en mode réduit ou non
 const toggleReducedState = (shouldReduce) => {
@@ -639,7 +802,9 @@ settingsButton.addEventListener('click', () => {
     alert('Accéder aux paramètres de l\'application.');
 });
 
-// Gestion des boutons Catégories
+// Les boutons de catégorie sont maintenant dynamiques, donc on ne les gère plus statiquement
+// Remove the static category buttons event listeners
+/*
 categoryButtons.forEach(button => {
     button.addEventListener('click', () => {
         const category = button.textContent.trim();
@@ -647,6 +812,7 @@ categoryButtons.forEach(button => {
         // Implémentez le filtrage des musiques par catégorie ici
     });
 });
+*/
 
 // Gestion des boutons de la barre de navigation
 // Sélectionner le bouton Discothèque
@@ -691,7 +857,7 @@ $$('.nav-button').forEach(button => {
                 loadNextMusic(); // Charger la musique suivante sans démarrer la lecture
             } else if (selector === '.back-button') {
                 // Action pour le bouton "Retour"
-                alert('Retour à la page précédente.');
+                playPreviousMusic(); // Charger la musique précédente
             }
         });
     }
